@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Yogeshwar Electric Shop</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- ═══ Login Screen ═══ -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-card">
+      <div class="shop-icon" aria-hidden="true">⚡</div>
+      <h1>Admin Login</h1>
+      <p>Yogeshwar Electric Shop</p>
+      <div class="form-group">
+        <input type="password" id="loginPassword" placeholder="Enter admin password" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary" id="loginBtn" style="width:100%">Login</button>
+      <p id="loginError" style="color:var(--danger);font-size:0.85rem;margin-top:12px;" class="hidden"></p>
+    </div>
+  </div>
+
+  <!-- ═══ Admin Dashboard (hidden until login) ═══ -->
+  <div id="adminDashboard" class="hidden">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content admin-header">
+        <div class="shop-info">
+          <div class="shop-icon" aria-hidden="true">⚡</div>
+          <div>
+            <h2>Admin Panel</h2>
+            <p class="shop-tagline">Yogeshwar Electric Shop</p>
+          </div>
+        </div>
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <main class="container">
+
+      <!-- Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="workers" id="tabWorkers">👷 Workers</button>
+        <button class="admin-tab" data-tab="jobs" id="tabJobs">🔧 Jobs</button>
+      </div>
+
+      <!-- ─── Workers Tab ─── -->
+      <div class="tab-panel active" id="panelWorkers">
+
+        <!-- Add Worker Form -->
+        <div class="form-card">
+          <h3>➕ Add New Worker</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="workerName">Name</label>
+              <input type="text" id="workerName" placeholder="Full name" maxlength="100" />
+            </div>
+            <div class="form-group">
+              <label for="workerPhone">Phone (10 digits)</label>
+              <input type="tel" id="workerPhone" placeholder="9876543210" maxlength="10" pattern="\d{10}" />
+            </div>
+            <div class="form-group">
+              <label for="workerJob">Job Category</label>
+              <select id="workerJob">
+                <option value="">Select job...</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="checkbox-group">
+              <input type="checkbox" id="workerWhatsApp" />
+              <label for="workerWhatsApp">Has WhatsApp</label>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="addWorkerBtn">➕ Add Worker</button>
+        </div>
+
+        <!-- Workers Table (desktop) -->
+        <div class="workers-table-wrap" id="workersTableWrap">
+          <table class="workers-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Job</th>
+                <th>Status</th>
+                <th>WhatsApp</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="workersTableBody">
+              <!-- Rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Workers Mobile Cards -->
+        <div class="mobile-card-list" id="workersMobileList">
+          <!-- Cards injected by JS -->
+        </div>
+      </div>
+
+      <!-- ─── Jobs Tab ─── -->
+      <div class="tab-panel" id="panelJobs">
+        <div class="form-card">
+          <h3>➕ Add New Job Category</h3>
+          <div class="add-job-row">
+            <input type="text" id="newJobName" placeholder="e.g. Welder" maxlength="50" />
+            <button class="btn btn-primary" id="addJobBtn">Add</button>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3>📋 Current Job Categories</h3>
+          <ul class="jobs-list" id="jobsList">
+            <!-- Items injected by JS -->
+          </ul>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ═══ Edit Modal (hidden) ═══ -->
+  <div class="modal-overlay hidden" id="editModal">
+    <div class="modal-card">
+      <h3 id="modalTitle">Edit Worker</h3>
+      <div class="form-group">
+        <label for="editName">Name</label>
+        <input type="text" id="editName" maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label for="editPhone">Phone (10 digits)</label>
+        <input type="tel" id="editPhone" maxlength="10" pattern="\d{10}" />
+      </div>
+      <div class="form-group">
+        <label for="editJob">Job Category</label>
+        <select id="editJob"></select>
+      </div>
+      <div class="checkbox-group" style="padding-top:0">
+        <input type="checkbox" id="editActive" />
+        <label for="editActive">Active (visible to customers)</label>
+      </div>
+      <div class="checkbox-group" style="padding-top:0;margin-top:8px">
+        <input type="checkbox" id="editWhatsApp" />
+        <label for="editWhatsApp">Has WhatsApp</label>
+      </div>
+      <input type="hidden" id="editId" />
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="editCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="editSaveBtn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Confirm Delete Modal ═══ -->
+  <div class="modal-overlay hidden" id="confirmModal">
+    <div class="modal-card">
+      <h3>Confirm Delete</h3>
+      <p class="confirm-text" id="confirmText">Are you sure you want to delete this worker? This cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="confirmCancelBtn">Cancel</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="alert"></div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

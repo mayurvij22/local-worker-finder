@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yogeshwar Electric Shop — Find Workers</title>
+  <meta name="description" content="Find trusted local electricians, plumbers, AC technicians, painters, and carpenters. Scan the QR code at Yogeshwar Electric Shop." />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- ─── Header ─── -->
+  <header class="header">
+    <div class="header-content">
+      <div class="shop-info">
+        <div class="shop-icon" aria-hidden="true">⚡</div>
+        <div>
+          <h1 class="shop-name" id="shopName">Yogeshwar Electric Shop</h1>
+          <p class="shop-tagline" id="tagline">Find trusted local workers</p>
+        </div>
+      </div>
+      <button class="lang-toggle" id="langToggle" aria-label="Switch language">हिं</button>
+    </div>
+  </header>
+
+  <!-- ─── Main Content ─── -->
+  <main class="container">
+
+    <!-- Search -->
+    <div class="search-bar">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+      </svg>
+      <input type="text" id="searchInput" class="search-input" placeholder="Search by name..." autocomplete="off" />
+    </div>
+
+    <!-- Job Filters -->
+    <div class="job-filters" id="jobFilters">
+      <button class="job-btn active" data-job="all" id="btnAll">All</button>
+      <!-- More buttons added by JS -->
+    </div>
+
+    <!-- Workers Grid (cards rendered by JS) -->
+    <div class="workers-grid" id="workersGrid"></div>
+
+    <!-- Empty State -->
+    <div class="empty-state hidden" id="emptyState">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.35-4.35" />
+        <path d="M8 11h6" />
+      </svg>
+      <p id="emptyText">No workers found</p>
+    </div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="alert"></div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

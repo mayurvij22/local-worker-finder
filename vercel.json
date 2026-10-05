@@ -1,0 +1,22 @@
+{
+  "headers": [
+    {
+      "source": "/api/workers",
+      "headers": [
+        { "key": "Cache-Control", "value": "s-maxage=60, stale-while-revalidate" }
+      ]
+    },
+    {
+      "source": "/api/jobs",
+      "headers": [
+        { "key": "Cache-Control", "value": "s-maxage=60, stale-while-revalidate" }
+      ]
+    },
+    {
+      "source": "/api/number",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    }
+  ]
+}
