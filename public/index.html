@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1e1b4b" />
   <title>Yogeshwar Electric Shop — Find Workers</title>
   <meta name="description" content="Find trusted local electricians, plumbers, AC technicians, painters, and carpenters. Scan the QR code at Yogeshwar Electric Shop." />
   <link rel="stylesheet" href="/css/style.css" />
@@ -24,7 +25,14 @@
   </header>
 
   <!-- ─── Main Content ─── -->
-  <main class="container">
+  <section class="hero">
+    <div class="hero-inner">
+      <h2 id="heroTitle">Need a skilled worker?</h2>
+      <p id="heroText">Electricians, plumbers, painters &amp; more — call or WhatsApp directly.</p>
+    </div>
+  </section>
+
+  <main class="container overlap">
 
     <!-- Search -->
     <div class="search-bar">
@@ -40,6 +48,8 @@
       <button class="job-btn active" data-job="all" id="btnAll">All</button>
       <!-- More buttons added by JS -->
     </div>
+
+    <p class="result-count hidden" id="resultCount"></p>
 
     <!-- Workers Grid (cards rendered by JS) -->
     <div class="workers-grid" id="workersGrid"></div>

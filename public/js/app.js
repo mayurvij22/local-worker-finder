@@ -27,6 +27,10 @@
       call:        'Call',
       whatsapp:    'WhatsApp',
       noWorkers:   'No workers found',
+      heroTitle:   'Need a skilled worker?',
+      heroText:    'Electricians, plumbers, painters & more — call or WhatsApp directly.',
+      countOne:    '1 worker available',
+      countMany:   ' workers available',
       loading:     'Loading...',
       error:       'Something went wrong. Please try again.',
     },
@@ -39,6 +43,10 @@
       call:        'कॉल करें',
       whatsapp:    'व्हाट्सएप',
       noWorkers:   'कोई कारीगर नहीं मिला',
+      heroTitle:   'कुशल कारीगर चाहिए?',
+      heroText:    'इलेक्ट्रीशियन, प्लंबर, पेंटर और बहुत कुछ — सीधे कॉल या व्हाट्सएप करें।',
+      countOne:    '1 कारीगर उपलब्ध',
+      countMany:   ' कारीगर उपलब्ध',
       loading:     'लोड हो रहा है...',
       error:       'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
     },
@@ -172,6 +180,8 @@
     searchInput.placeholder = t('search');
     btnAll.textContent      = t('allJobs');
     emptyText.textContent   = t('noWorkers');
+    $('heroTitle').textContent = t('heroTitle');
+    $('heroText').textContent  = t('heroText');
     langToggle.textContent  = currentLang === 'en' ? 'हिं' : 'EN';
 
     // Re-render job buttons with translated labels
@@ -220,13 +230,17 @@
     });
 
     workersGrid.innerHTML = '';
+    var countEl = $('resultCount');
 
     if (filtered.length === 0) {
+      countEl.classList.add('hidden');
       emptyState.classList.remove('hidden');
       return;
     }
 
     emptyState.classList.add('hidden');
+    countEl.textContent = filtered.length === 1 ? t('countOne') : filtered.length + t('countMany');
+    countEl.classList.remove('hidden');
 
     filtered.forEach(function (worker, index) {
       var card = createWorkerCard(worker, index);
