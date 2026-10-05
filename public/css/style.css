@@ -699,3 +699,73 @@ input, select, textarea { font-family: inherit; }
   .modal-card::before { display: none; }
   .modal-actions .btn { flex: 0 0 auto; }
 }
+
+
+/* ══════════ 14. LAYOUT REFINEMENTS (mobile-first) ══════════ */
+
+/* Header scrolls away; the search toolbar stays pinned instead */
+.header { position: static; padding-top: 10px; padding-bottom: 10px; }
+.dev-bar + .header { padding-top: 10px; }
+
+/* Compact hero */
+.hero { padding: 4px var(--sp-md) 52px; }
+.hero h2 { font-size: 1.3rem; }
+.hero p { font-size: 0.85rem; margin-top: 4px; }
+.hero-contact {
+  flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+  margin: 12px calc(var(--sp-md) * -1) 0; padding: 0 var(--sp-md);
+}
+.hero-contact::-webkit-scrollbar { display: none; }
+.hero-chip { flex-shrink: 0; min-height: 38px; font-size: 0.8rem; white-space: nowrap; }
+
+/* Sticky search + filters, full-bleed */
+.toolbar {
+  position: sticky; top: 0; z-index: 90;
+  margin: 0 calc(var(--sp-md) * -1) 4px;
+  padding: 10px var(--sp-md) 4px;
+  background: rgba(246,247,251,0.92);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.container.overlap .toolbar { margin-top: 0; }
+.search-bar { margin-bottom: 8px; }
+.search-input { height: 48px; box-shadow: var(--shadow-sm); border-color: var(--border); }
+.job-filters { margin: 0 calc(var(--sp-md) * -1); padding: 2px var(--sp-md) 8px; }
+.job-btn { min-height: 38px; padding: 0 16px; font-size: 0.85rem; }
+
+/* Compact cards */
+.workers-grid { gap: 10px; }
+.worker-card { padding: 14px; border-radius: 16px; }
+.worker-info { gap: 12px; margin-bottom: 12px; }
+.worker-avatar { width: 46px; height: 46px; border-radius: 14px; font-size: 0.95rem; }
+.worker-name { font-size: 1rem; }
+.show-number-btn { min-height: 46px; }
+
+/* Floating call button (phones only) */
+.fab-call {
+  position: fixed; right: 16px;
+  bottom: calc(16px + var(--safe-bottom));
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--whatsapp), var(--whatsapp-dark));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 20px rgba(18,140,126,0.45);
+  z-index: 95;
+  transition: transform 0.15s;
+}
+.fab-call:active { transform: scale(0.92); }
+.site-footer { margin-bottom: 72px; }
+
+/* Admin: pinned tabs at very top now that header scrolls */
+.admin-tabs { top: 8px; }
+
+@media (min-width: 640px) {
+  .hero { padding: 8px var(--sp-lg) 56px; }
+  .hero h2 { font-size: 1.8rem; }
+  .hero-contact { flex-wrap: wrap; overflow: visible; margin: 14px 0 0; padding: 0; }
+  .toolbar { margin: 0 calc(var(--sp-lg) * -1) 4px; padding: 12px var(--sp-lg) 4px; }
+  .job-filters { margin: 0; padding: 2px 0 8px; }
+  .fab-call { display: none; }
+  .site-footer { margin-bottom: 0; }
+}
+@media (min-width: 769px) { .admin-tabs { top: 8px; } }
