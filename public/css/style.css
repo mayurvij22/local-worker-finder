@@ -126,6 +126,19 @@ input, select, textarea { font-family: inherit; }
 .lang-toggle:hover { background: rgba(255,255,255,0.22); }
 .lang-toggle:active { transform: scale(0.95); }
 
+/* Developer strip */
+.dev-bar {
+  background: #0b1020;
+  color: rgba(255,255,255,0.7);
+  text-align: center;
+  font-size: 0.72rem;
+  padding: 6px var(--sp-md);
+  padding-top: calc(6px + env(safe-area-inset-top, 0px));
+  letter-spacing: 0.02em;
+}
+.dev-bar strong { color: var(--accent); font-weight: 700; }
+.dev-bar + .header { padding-top: 12px; top: 0; }
+
 /* ══════════ 3. HERO + CONTAINER ══════════ */
 
 .hero {
@@ -138,6 +151,33 @@ input, select, textarea { font-family: inherit; }
   font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2;
 }
 .hero p { font-size: 0.9rem; opacity: 0.8; margin-top: 6px; max-width: 460px; }
+
+.hero-contact { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.hero-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 6px 14px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: var(--r-full);
+  font-size: 0.85rem; font-weight: 600; color: #fff;
+  transition: background 0.2s;
+}
+.hero-chip:hover { background: rgba(255,255,255,0.24); }
+
+.site-footer {
+  margin-top: var(--sp-xl);
+  padding: 20px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.site-footer .footer-shop { font-weight: 700; color: var(--text); font-size: 0.95rem; }
+.site-footer a { color: var(--primary); font-weight: 600; }
+.site-footer .footer-dev { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-muted); }
 
 .container {
   max-width: 1000px;

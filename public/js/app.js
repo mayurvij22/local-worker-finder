@@ -19,7 +19,7 @@
 
   var T = {
     en: {
-      shopName:    'Yogeshwar Electric Shop',
+      shopName:    'New Yogeshwar Electric & Nal Fitting',
       tagline:     'Find trusted local workers',
       search:      'Search by name...',
       allJobs:     'All',
@@ -31,11 +31,13 @@
       heroText:    'Electricians, plumbers, painters & more — call or WhatsApp directly.',
       countOne:    '1 worker available',
       countMany:   ' workers available',
+      address:     'Sane Nagar, Amalner, Maharashtra 425401',
+      devBy:       'Site developed by Mayuur, Bangalore',
       loading:     'Loading...',
       error:       'Something went wrong. Please try again.',
     },
     hi: {
-      shopName:    'योगेश्वर इलेक्ट्रिक शॉप',
+      shopName:    'न्यू योगेश्वर इलेक्ट्रिक & नल फिटिंग',
       tagline:     'विश्वसनीय स्थानीय कारीगर खोजें',
       search:      'नाम से खोजें...',
       allJobs:     'सभी',
@@ -47,6 +49,8 @@
       heroText:    'इलेक्ट्रीशियन, प्लंबर, पेंटर और बहुत कुछ — सीधे कॉल या व्हाट्सएप करें।',
       countOne:    '1 कारीगर उपलब्ध',
       countMany:   ' कारीगर उपलब्ध',
+      address:     'सानेनगर, अमळनेर, महाराष्ट्र 425401',
+      devBy:       'साइट डेवलपर: मयूर, बेंगलुरु',
       loading:     'लोड हो रहा है...',
       error:       'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
     },
@@ -181,6 +185,11 @@
     btnAll.textContent      = t('allJobs');
     emptyText.textContent   = t('noWorkers');
     $('heroTitle').textContent = t('heroTitle');
+    $('shopAddress').textContent = t('address');
+    $('footerShop').textContent  = t('shopName');
+    $('footerAddr').textContent  = t('address');
+    $('footerDev').textContent   = t('devBy');
+    $('devBar').textContent      = t('devBy');
     $('heroText').textContent  = t('heroText');
     langToggle.textContent  = currentLang === 'en' ? 'हिं' : 'EN';
 
@@ -356,10 +365,10 @@
         if (data.whatsapp) {
           var waText;
           if (currentLang === 'hi') {
-            waText = 'नमस्ते, मुझे आपका नंबर योगेश्वर इलेक्ट्रिक शॉप से मिला। मुझे '
+            waText = 'नमस्ते, मुझे आपका नंबर न्यू योगेश्वर इलेक्ट्रिक & नल फिटिंग से मिला। मुझे '
               + worker.job + ' की ज़रूरत है। क्या आप उपलब्ध हैं?';
           } else {
-            waText = 'Namaste, I found your contact through Yogeshwar Electric Shop. I need a '
+            waText = 'Namaste, I found your contact through New Yogeshwar Electric & Nal Fitting. I need a '
               + worker.job + '. Are you available?';
           }
 
