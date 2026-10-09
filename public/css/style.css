@@ -715,12 +715,8 @@ input, select, textarea { font-family: inherit; }
 .hero { padding: 4px var(--sp-md) 52px; }
 .hero h2 { font-size: 1.3rem; }
 .hero p { font-size: 0.85rem; margin-top: 4px; }
-.hero-contact {
-  flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
-  margin: 12px calc(var(--sp-md) * -1) 0; padding: 0 var(--sp-md);
-}
-.hero-contact::-webkit-scrollbar { display: none; }
-.hero-chip { flex-shrink: 0; min-height: 38px; font-size: 0.8rem; white-space: nowrap; }
+.hero-contact { margin-top: 12px; }
+.hero-chip { min-height: 38px; font-size: 0.8rem; }
 
 /* Sticky search + filters, full-bleed */
 .toolbar {
@@ -766,10 +762,52 @@ input, select, textarea { font-family: inherit; }
 @media (min-width: 640px) {
   .hero { padding: 8px var(--sp-lg) 56px; }
   .hero h2 { font-size: 1.8rem; }
-  .hero-contact { flex-wrap: wrap; overflow: visible; margin: 14px 0 0; padding: 0; }
-  .toolbar { margin: 0 calc(var(--sp-lg) * -1) 4px; padding: 12px var(--sp-lg) 4px; }
-  .job-filters { margin: 0; padding: 2px 0 8px; }
+  .hero-contact { margin-top: 14px; }
   .fab-call { display: none; }
   .site-footer { margin-bottom: 0; }
 }
 @media (min-width: 769px) { .admin-tabs { top: 8px; } }
+
+
+/* ══════════ 15. POLISH ══════════ */
+
+/* Phones in landscape: keep content clear of the notch */
+body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+
+/* One gradient behind header + hero (no seam); the shop name may wrap instead of being cut off */
+.top-band { background: linear-gradient(135deg, var(--primary-darker) 0%, var(--primary-dark) 100%); }
+.top-band .header { background: none; box-shadow: none; }
+.top-band .hero { background: none; padding-top: 14px; }
+.top-band .shop-name { white-space: normal; overflow: visible; text-overflow: clip; font-size: 0.95rem; }
+
+/* Cards in a row share one height; the Book button sits at the bottom of each */
+.worker-card { display: flex; flex-direction: column; }
+.worker-skills { flex: 1; align-content: flex-start; }
+@media (hover: none) {
+  .worker-card:hover { transform: none; box-shadow: var(--shadow-sm); }
+}
+
+/* Admin job tick-boxes: the generic ".form-group label" style must not apply to them */
+.form-group .job-check {
+  display: inline-flex; margin: 0;
+  font-size: 0.9rem; letter-spacing: 0; text-transform: none;
+}
+
+/* Tablet / desktop: search + filters become a floating card instead of a full-width strip */
+@media (min-width: 640px) {
+  .toolbar {
+    top: 8px;
+    margin: 0 0 14px;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    box-shadow: var(--shadow-md);
+  }
+  .search-input { background: var(--bg); box-shadow: none; }
+  .job-filters { padding: 2px 0 0; margin: 0; }
+
+  /* Line the header + hero text up with the card column below */
+  .top-band .header, .top-band .hero { padding-left: 0; padding-right: 0; }
+  .top-band .header-content, .top-band .hero-inner { padding: 0 var(--sp-lg); }
+}
