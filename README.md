@@ -54,14 +54,15 @@ Open your Google Sheet and create **two tabs** (the tabs at the bottom of the sh
 #### Tab 1: "Workers"
 Rename the first tab to exactly **Workers** and add these headers in Row 1:
 
-| A (ID) | B (Name) | C (Phone) | D (Job) | E (Active) | F (WhatsApp) |
-|--------|----------|-----------|---------|------------|---------------|
-| ID     | Name     | Phone     | Job     | Active     | WhatsApp      |
+| A (ID) | B (Name) | C (Phone) | D (Job) | E (Active) | F (WhatsApp) | G (Experience) |
+|--------|----------|-----------|---------|------------|--------------|----------------|
+| ID     | Name     | Phone     | Job     | Active     | WhatsApp     | Experience     |
 
 - **ID** — Will be auto-generated when you add workers from admin
 - **Phone** — 10 digits only, no +91 (e.g., `9876543210`)
 - **Active** — `Yes` or `No`
 - **WhatsApp** — `Yes` or `No`
+- **Experience** — years, shown as "5+ years". Empty means 5. To fill 5 for every existing worker: `node --env-file=.env scripts/set-default-experience.js`
 
 #### Tab 2: "Jobs"
 Create a second tab named exactly **Jobs** and add this header in Row 1:
@@ -78,6 +79,10 @@ AC Technician
 Painter
 Carpenter
 ```
+
+#### Tab 3: "Events" (created automatically)
+The app creates this tab the first time a customer visits. It logs visits, category taps,
+"Show number", Call and WhatsApp taps for the admin **Analytics** tab. You don't need to touch it.
 
 #### Share the Sheet with the Service Account
 1. Click the **Share** button (top-right of the sheet)
@@ -228,7 +233,7 @@ Open these URLs in your browser:
 |---|---|
 | "Failed to load workers" | Check that the sheet is shared with the service account email as **Editor** |
 | Auth/permission errors | Verify `GOOGLE_PRIVATE_KEY` is correct in Vercel env vars. Redeploy after changes. |
-| Workers don't appear | Make sure the Workers tab has the header row: `ID, Name, Phone, Job, Active, WhatsApp` |
+| Workers don't appear | Make sure the Workers tab has the header row: `ID, Name, Phone, Job, Active, WhatsApp, Experience` |
 | Admin login fails | Check `ADMIN_PASSWORD` env variable in Vercel matches what you're typing |
 | Changes not showing | The cache refreshes every 60 seconds. Wait or open in incognito. |
 | "Too many requests" | Rate limit hit. Wait 1 minute (or 24 hours for daily limit). |

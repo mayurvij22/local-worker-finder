@@ -36,7 +36,15 @@
           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
           082081 04775
         </a>
-        <button id="langToggle" type="button" class="inline-flex h-9 min-w-[2.75rem] items-center justify-center rounded-full border border-neutral-300 px-3 text-sm font-semibold transition hover:border-neutral-900">हिं</button>
+        <label class="relative inline-flex">
+          <span class="sr-only">Language / भाषा</span>
+          <select id="langSelect" class="h-9 cursor-pointer appearance-none rounded-full border border-neutral-300 bg-white pl-3 pr-7 text-sm font-semibold outline-none transition hover:border-neutral-900 focus-visible:ring-4 focus-visible:ring-brand-500/30">
+            <option value="en">EN</option>
+            <option value="hi">हिंदी</option>
+            <option value="mr">मराठी</option>
+          </select>
+          <svg class="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </label>
       </div>
     </div>
   </header>

@@ -1,6 +1,6 @@
 /**
  * Admin dashboard — password login (checked server-side), add / edit /
- * delete workers, add / delete job categories.
+ * delete workers, add / delete job categories, customer analytics.
  *
  * The password is kept in memory only, never in storage.
  */
@@ -12,6 +12,7 @@ const state = {
   workers: [],
   jobs: [],
   pendingDelete: null,   // { kind: 'worker', id, name } | { kind: 'job', name }
+  statsDays: 7,
 };
 
 /** POST to /api/admin with the password and an action. */
@@ -41,6 +42,7 @@ async function withBusy(btn, busyText, fn) {
 }
 
 const isPhone = (v) => /^\d{10}$/.test(v);
+const isExperience = (v) => /^\d{1,2}$/.test(v) && Number(v) <= 60;
 
 // ═══ Login / logout ═══
 
@@ -81,16 +83,19 @@ $('logoutBtn').addEventListener('click', () => {
 
 // ═══ Tabs ═══
 
+const TABS = { workers: ['tabWorkers', 'panelWorkers'], jobs: ['tabJobs', 'panelJobs'], stats: ['tabStats', 'panelStats'] };
+
 function selectTab(name) {
-  const workers = name === 'workers';
-  $('tabWorkers').setAttribute('aria-selected', String(workers));
-  $('tabJobs').setAttribute('aria-selected', String(!workers));
-  $('panelWorkers').hidden = !workers;
-  $('panelJobs').hidden = workers;
+  for (const [key, [tab, panel]] of Object.entries(TABS)) {
+    $(tab).setAttribute('aria-selected', String(key === name));
+    $(panel).hidden = key !== name;
+  }
+  if (name === 'stats') loadStats();
 }
 
-$('tabWorkers').addEventListener('click', () => selectTab('workers'));
-$('tabJobs').addEventListener('click', () => selectTab('jobs'));
+for (const key of Object.keys(TABS)) {
+  $(TABS[key][0]).addEventListener('click', () => selectTab(key));
+}
 
 // ═══ Load data ═══
 
@@ -155,7 +160,7 @@ function renderWorkers() {
   if (state.workers.length === 0) {
     const row = el('tr');
     const cell = el('td', 'px-4 py-10 text-center text-neutral-400', 'No workers yet. Add one!');
-    cell.colSpan = 5;
+    cell.colSpan = 6;
     row.append(cell);
     body.replaceChildren(row);
     cards.replaceChildren(el('p', 'card px-4 py-10 text-center text-sm text-neutral-400', 'No workers yet. Add one!'));
@@ -173,7 +178,13 @@ function renderWorkers() {
     const wrap = el('div', 'flex justify-end gap-2');
     wrap.append(...actionButtons(w, false));
     actions.append(wrap);
-    tr.append(name, el('td', 'px-4 py-3 tabular-nums text-neutral-600', w.phone), el('td', 'px-4 py-3 text-neutral-600', w.job), status, actions);
+    tr.append(
+      name,
+      el('td', 'px-4 py-3 tabular-nums text-neutral-600', w.phone),
+      el('td', 'px-4 py-3 text-neutral-600', w.job),
+      el('td', 'whitespace-nowrap px-4 py-3 text-neutral-600', `${w.experience}+ yrs`),
+      status, actions,
+    );
     return tr;
   }));
 
@@ -183,7 +194,7 @@ function renderWorkers() {
     const who = el('div', 'min-w-0');
     who.append(
       el('p', 'break-words font-semibold', w.name),
-      el('p', 'mt-0.5 text-sm text-neutral-500', `${w.job} · ${w.phone}${w.whatsapp ? ' · WhatsApp' : ''}`),
+      el('p', 'mt-0.5 text-sm text-neutral-500', `${w.job} · ${w.experience}+ yrs · ${w.phone}${w.whatsapp ? ' · WhatsApp' : ''}`),
     );
     head.append(who, statusBadge(w.active));
     const row = el('div', 'mt-4 flex gap-2 border-t border-neutral-100 pt-3');
@@ -236,13 +247,17 @@ $('addWorkerForm').addEventListener('submit', (e) => {
   const name = $('workerName').value.trim();
   const phone = $('workerPhone').value.trim();
   const job = $('workerJob').value;
+  const experience = $('workerExperience').value.trim() || '5';
 
   if (!name) { showToast('Please enter worker name.', 'error'); return $('workerName').focus(); }
   if (!isPhone(phone)) { showToast('Phone must be exactly 10 digits.', 'error'); return $('workerPhone').focus(); }
+  if (!isExperience(experience)) { showToast('Experience must be 0–60 years.', 'error'); return $('workerExperience').focus(); }
   if (!job) { showToast('Please select a job category.', 'error'); return $('workerJob').focus(); }
 
   withBusy($('addWorkerBtn'), 'Adding…', async () => {
-    const res = await adminAPI({ action: 'addWorker', name, phone, job, whatsapp: $('workerWhatsApp').checked });
+    const res = await adminAPI({
+      action: 'addWorker', name, phone, job, experience: Number(experience), whatsapp: $('workerWhatsApp').checked,
+    });
     if (!res.ok) return showToast(res.data.error || 'Failed to add worker.', 'error');
     showToast('Worker added!', 'success');
     e.target.reset();
@@ -259,6 +274,7 @@ function openEdit(w) {
   $('editId').value = w.id;
   $('editName').value = w.name;
   $('editPhone').value = w.phone;
+  $('editExperience').value = w.experience;
   $('editActive').checked = w.active;
   $('editWhatsApp').checked = w.whatsapp;
   fillJobSelect($('editJob'), w.job);
@@ -271,14 +287,16 @@ $('editForm').addEventListener('submit', (e) => {
   const name = $('editName').value.trim();
   const phone = $('editPhone').value.trim();
   const job = $('editJob').value;
+  const experience = $('editExperience').value.trim() || '5';
 
   if (!name) return showToast('Name is required.', 'error');
   if (!isPhone(phone)) return showToast('Phone must be 10 digits.', 'error');
+  if (!isExperience(experience)) return showToast('Experience must be 0–60 years.', 'error');
   if (!job) return showToast('Job is required.', 'error');
 
   withBusy($('editSaveBtn'), 'Saving…', async () => {
     const res = await adminAPI({
-      action: 'updateWorker', id: $('editId').value, name, phone, job,
+      action: 'updateWorker', id: $('editId').value, name, phone, job, experience: Number(experience),
       active: $('editActive').checked, whatsapp: $('editWhatsApp').checked,
     });
     if (!res.ok) return showToast(res.data.error || 'Failed to update.', 'error');
@@ -331,4 +349,96 @@ $('addJobForm').addEventListener('submit', (e) => {
     $('newJobName').value = '';
     loadJobs();
   });
+});
+
+// ═══ Analytics ═══
+
+let statsRequest = 0; // ignore slow responses for an older range
+
+async function loadStats() {
+  const ticket = ++statsRequest;
+  $('dailyChart').classList.add('animate-pulse', 'opacity-60');
+  try {
+    const res = await adminAPI({ action: 'getStats', days: state.statsDays });
+    if (ticket !== statsRequest) return;
+    if (!res.ok) return showToast(res.data.error || 'Failed to load analytics.', 'error');
+    renderAnalytics(res.data);
+  } catch {
+    showToast('Network error loading analytics.', 'error');
+  } finally {
+    if (ticket === statsRequest) $('dailyChart').classList.remove('animate-pulse', 'opacity-60');
+  }
+}
+
+const shortDate = (iso) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+function renderAnalytics({ days, totals, workers, categories }) {
+  $('kpiVisits').textContent = totals.visit;
+  $('kpiReveals').textContent = totals.reveal;
+  $('kpiCalls').textContent = totals.call;
+  $('kpiWhatsApp').textContent = totals.whatsapp;
+
+  // Daily bars: visits (purple), with the share that led to a number shown (green) at the bottom
+  const max = Math.max(1, ...days.map((d) => Math.max(d.visits, d.reveals)));
+  $('dailyChart').replaceChildren(...days.map((d) => {
+    const col = el('div', 'group relative flex h-full flex-1 items-end');
+    col.title = `${shortDate(d.date)}: ${d.visits} visits, ${d.reveals} numbers shown`;
+    const top = Math.max(d.visits, d.reveals);
+    const bar = el('div', 'relative w-full overflow-hidden rounded-t bg-brand-500/80 transition group-hover:bg-brand-500');
+    bar.style.height = `${(top / max) * 100}%`;
+    bar.style.minHeight = top ? '3px' : '0';
+    const reveals = el('div', 'absolute inset-x-0 bottom-0 bg-emerald-500');
+    reveals.style.height = top ? `${(d.reveals / top) * 100}%` : '0';
+    bar.append(reveals);
+    col.append(bar);
+    return col;
+  }));
+  const mid = days[Math.floor(days.length / 2)];
+  $('dailyLabels').replaceChildren(
+    ...[days[0], mid, days[days.length - 1]].map((d) => el('span', '', shortDate(d.date))));
+
+  // Top workers
+  $('topWorkers').replaceChildren(...(workers.length ? workers.map((w) => {
+    const tr = el('tr');
+    tr.append(
+      el('td', 'max-w-[10rem] truncate py-2.5 pr-2 font-medium', w.name),
+      el('td', 'px-2 py-2.5 text-right font-semibold tabular-nums text-brand-600', String(w.reveal)),
+      el('td', 'px-2 py-2.5 text-right tabular-nums', String(w.call)),
+      el('td', 'py-2.5 pl-2 text-right tabular-nums text-emerald-600', String(w.whatsapp)),
+    );
+    return tr;
+  }) : [emptyRow('No worker activity yet.')]));
+
+  // Popular categories
+  const most = Math.max(1, ...categories.map((c) => c.count));
+  $('topCategories').replaceChildren(...(categories.length ? categories.map((c) => {
+    const li = el('li');
+    const head = el('div', 'flex items-center justify-between text-sm');
+    head.append(el('span', 'font-medium', c.name), el('span', 'tabular-nums text-neutral-500', String(c.count)));
+    const rail = el('div', 'mt-1.5 h-2 overflow-hidden rounded-full bg-neutral-100');
+    const fill = el('div', 'h-full rounded-full bg-brand-500');
+    fill.style.width = `${(c.count / most) * 100}%`;
+    rail.append(fill);
+    li.append(head, rail);
+    return li;
+  }) : [el('li', 'py-4 text-center text-sm text-neutral-400', 'No category taps yet.')]));
+}
+
+function emptyRow(text) {
+  const tr = el('tr');
+  const td = el('td', 'py-6 text-center text-sm text-neutral-400', text);
+  td.colSpan = 4;
+  tr.append(td);
+  return tr;
+}
+
+$('statsRange').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-days]');
+  if (!btn) return;
+  state.statsDays = Number(btn.dataset.days);
+  for (const b of $('statsRange').querySelectorAll('button')) {
+    b.setAttribute('aria-pressed', String(b === btn));
+  }
+  loadStats();
 });

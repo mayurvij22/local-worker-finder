@@ -6,7 +6,7 @@
  * Never cached.
  */
 
-const { getWorkerPhone } = require('../lib/sheets');
+const { getWorkerPhone, logEvent } = require('../lib/sheets');
 const { numberPerMinute, numberPerDay } = require('../lib/ratelimit');
 
 module.exports = async function handler(req, res) {
@@ -31,6 +31,7 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({
       error: 'Too many requests. Please wait a minute and try again.',
       error_hi: 'बहुत ज़्यादा अनुरोध। कृपया एक मिनट बाद दोबारा कोशिश करें।',
+      error_mr: 'खूप जास्त विनंत्या. कृपया एका मिनिटाने पुन्हा प्रयत्न करा.',
       retryAfter: minuteCheck.retryAfter,
     });
   }
@@ -40,6 +41,7 @@ module.exports = async function handler(req, res) {
     return res.status(429).json({
       error: 'Daily limit reached. Please come back tomorrow.',
       error_hi: 'आज की सीमा पूरी हो गई। कृपया कल दोबारा आएं।',
+      error_mr: 'आजची मर्यादा संपली. कृपया उद्या पुन्हा या.',
       retryAfter: dayCheck.retryAfter,
     });
   }
@@ -51,8 +53,15 @@ module.exports = async function handler(req, res) {
       return res.status(404).json({ error: 'Worker not found' });
     }
 
+    // Analytics — never let a logging failure block the number
+    try {
+      await logEvent({ type: 'reveal', value: worker.job, workerId: id, workerName: worker.name });
+    } catch (err) {
+      console.error('reveal log error:', err.message);
+    }
+
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-    return res.status(200).json(worker);
+    return res.status(200).json({ phone: worker.phone, whatsapp: worker.whatsapp, job: worker.job });
   } catch (err) {
     console.error('GET /api/number error:', err.message);
     return res.status(500).json({ error: 'Failed to load number. Please try again.' });

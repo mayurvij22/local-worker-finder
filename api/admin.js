@@ -7,6 +7,13 @@
  */
 
 const sheets = require('../lib/sheets');
+const { buildStats } = require('../lib/analytics');
+
+/** Years of experience from the form; empty or invalid → the default (5). */
+function toExperience(value) {
+  const n = Number(value);
+  return value !== '' && Number.isInteger(n) && n >= 0 && n <= 60 ? n : sheets.DEFAULT_EXPERIENCE;
+}
 const { adminLogin } = require('../lib/ratelimit');
 
 module.exports = async function handler(req, res) {
@@ -49,7 +56,7 @@ module.exports = async function handler(req, res) {
       }
 
       case 'addWorker': {
-        const { name, phone, job, whatsapp } = body;
+        const { name, phone, job, whatsapp, experience } = body;
 
         // Validate required fields
         if (!name || !phone || !job) {
@@ -67,13 +74,14 @@ module.exports = async function handler(req, res) {
           phone: phone.trim(),
           job: job.trim().substring(0, 50),
           whatsapp: whatsapp === true || whatsapp === 'Yes',
+          experience: toExperience(experience),
         });
 
         return res.status(201).json({ success: true, id });
       }
 
       case 'updateWorker': {
-        const { id, name, phone, job, active, whatsapp } = body;
+        const { id, name, phone, job, active, whatsapp, experience } = body;
         if (!id) {
           return res.status(400).json({ error: 'Worker ID is required.' });
         }
@@ -89,6 +97,7 @@ module.exports = async function handler(req, res) {
           job: (job || '').trim().substring(0, 50),
           active: active === true || active === 'Yes',
           whatsapp: whatsapp === true || whatsapp === 'Yes',
+          experience: toExperience(experience),
         });
 
         if (!updated) {
@@ -136,6 +145,14 @@ module.exports = async function handler(req, res) {
           return res.status(404).json({ error: 'Job not found.' });
         }
         return res.status(200).json({ success: true });
+      }
+
+      // ─── Analytics ───
+
+      case 'getStats': {
+        const days = Math.min(Math.max(parseInt(body.days, 10) || 7, 1), 90);
+        const [events, workers] = await Promise.all([sheets.getEvents(), sheets.getAllWorkers()]);
+        return res.status(200).json(buildStats(events, workers, days));
       }
 
       // ─── Auth check (just verifies password) ───

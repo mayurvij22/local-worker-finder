@@ -1,5 +1,5 @@
 /**
- * i18n.js — English / Hindi strings and job names + icons for the customer page.
+ * i18n.js — English / Hindi / Marathi strings and job names + icons for the customer page.
  */
 
 export const STRINGS = {
@@ -22,6 +22,7 @@ export const STRINGS = {
     workersTitle: 'All workers',
     clearFilter:  'Show all',
     verified:     'Recommended',
+    experience:   '{n}+ years experience',
     showNumber:   'Show number',
     call:         'Call',
     whatsapp:     'WhatsApp',
@@ -52,6 +53,7 @@ export const STRINGS = {
     workersTitle: 'सभी कारीगर',
     clearFilter:  'सभी दिखाएं',
     verified:     'अनुशंसित',
+    experience:   '{n}+ साल का अनुभव',
     showNumber:   'नंबर दिखाएं',
     call:         'कॉल करें',
     whatsapp:     'व्हाट्सएप',
@@ -63,7 +65,40 @@ export const STRINGS = {
     footerAbout:  'अमळनेर में बिजली और नल के काम के लिए आपकी स्थानीय दुकान।',
     error:        'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
   },
+  mr: {
+    shopName:     'न्यू योगेश्वर इलेक्ट्रिक & नळ फिटिंग',
+    location:     'साने नगर, अमळनेर',
+    devBy:        'साइट डेव्हलपर: मयूर, बेंगळुरू',
+    heroTitle:    'विश्वासू स्थानिक कारागीर, फक्त एका टॅपवर',
+    heroText:     'इलेक्ट्रिशियन, प्लंबर, पेंटर आणि बरेच काही — थेट कॉल किंवा व्हॉट्सअ‍ॅप करा.',
+    search:       'नावाने कारागीर शोधा',
+    lookingFor:   'तुम्हाला काय हवे आहे?',
+    allJobs:      'सर्व',
+    trust1:       'दुकानाने शिफारस केलेले',
+    trust2:       'थेट कॉल किंवा व्हॉट्सअ‍ॅप',
+    trust3:       'अमळनेरमधील स्थानिक',
+    promoTitle:   'कोणाला बोलवावे कळत नाही?',
+    promoText:    'दुकानात कॉल करा, आम्ही तुम्हाला विश्वासू कारागिराशी जोडून देऊ.',
+    callShop:     'दुकानात कॉल करा',
+    directions:   'रस्ता पहा',
+    workersTitle: 'सर्व कारागीर',
+    clearFilter:  'सर्व दाखवा',
+    verified:     'शिफारस केलेले',
+    experience:   '{n}+ वर्षांचा अनुभव',
+    showNumber:   'नंबर दाखवा',
+    call:         'कॉल करा',
+    whatsapp:     'व्हॉट्सअ‍ॅप',
+    noWorkers:    'एकही कारागीर सापडला नाही',
+    noWorkersHint:'दुसरी श्रेणी किंवा दुसरे नाव वापरून पहा.',
+    countOne:     '1 कारागीर',
+    countMany:    ' कारागीर',
+    address:      'साने नगर, अमळनेर, महाराष्ट्र 425401',
+    footerAbout:  'अमळनेरमधील वीज आणि नळाच्या कामासाठी तुमचे स्थानिक दुकान.',
+    error:        'काहीतरी चुकले. कृपया पुन्हा प्रयत्न करा.',
+  },
 };
+
+export const LANGS = ['en', 'hi', 'mr'];
 
 const JOB_HI = {
   'Electrician':   'इलेक्ट्रीशियन',
@@ -75,8 +110,19 @@ const JOB_HI = {
   'Welder':        'वेल्डर',
 };
 
+const JOB_MR = {
+  'Electrician':   'इलेक्ट्रिशियन',
+  'Plumber':       'प्लंबर',
+  'AC Technician': 'AC टेक्निशियन',
+  'Painter':       'पेंटर',
+  'Carpenter':     'सुतार',
+  'Mason':         'गवंडी',
+  'Welder':        'वेल्डर',
+};
+
 export function jobLabel(name, lang) {
-  return (lang === 'hi' && JOB_HI[name]) || name;
+  const map = lang === 'hi' ? JOB_HI : lang === 'mr' ? JOB_MR : {};
+  return map[name] || name;
 }
 
 // Job names come from the sheet, so match loosely; unknown jobs get a toolbox.

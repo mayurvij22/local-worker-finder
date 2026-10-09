@@ -4,16 +4,28 @@
  *
  * The worker list is cached in localStorage for an instant first paint
  * (it has NO phone numbers). Revealed numbers live in memory only.
+ *
+ * Visits, category taps and call / WhatsApp taps are sent to /api/track
+ * for the admin Analytics tab ("Show number" is logged by the server).
  */
 
 import { $, el, icon, spinner, showToast, store } from '../shared/dom.js';
-import { STRINGS, jobLabel, jobIcon } from './i18n.js';
+import { STRINGS, LANGS, jobLabel, jobIcon } from './i18n.js';
 
 const CACHE_KEY = 'yws_workers';
 const LANG_KEY  = 'yws_lang';
+const VISIT_KEY = 'yws_visit';
+
+/** Saved choice first, then the phone's language, then English. */
+function initialLang() {
+  const saved = store.get(LANG_KEY);
+  if (LANGS.includes(saved)) return saved;
+  const device = (navigator.language || '').slice(0, 2);
+  return LANGS.includes(device) ? device : 'en';
+}
 
 const state = {
-  lang: store.get(LANG_KEY) === 'hi' ? 'hi' : 'en',
+  lang: initialLang(),
   job: 'all',
   query: '',
   workers: [],
@@ -22,7 +34,8 @@ const state = {
   revealed: new Map(),    // worker id → { phone, whatsapp }
 };
 
-const t = (key) => STRINGS[state.lang][key] ?? STRINGS.en[key] ?? key;
+const t = (key, vars = {}) =>
+  (STRINGS[state.lang][key] ?? STRINGS.en[key] ?? key).replace(/\{(\w+)\}/g, (_, v) => vars[v] ?? '');
 
 // ─── Helpers ───
 
@@ -43,6 +56,16 @@ function avatarColor(name) {
 
 const formatPhone = (p) => `+91 ${p.slice(0, 5)} ${p.slice(5)}`;
 
+/** Fire-and-forget analytics; failures are ignored. */
+function track(type, extra = {}) {
+  fetch('/api/track', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, ...extra }),
+    keepalive: true, // still sent if the tap opens the dialer / WhatsApp
+  }).catch(() => {});
+}
+
 // ─── Static text ───
 
 function applyTranslations() {
@@ -51,8 +74,7 @@ function applyTranslations() {
     node.textContent = t(node.dataset.i18n);
   });
   $('searchInput').placeholder = t('search');
-  $('langToggle').textContent = state.lang === 'en' ? 'हिं' : 'EN';
-  $('langToggle').setAttribute('aria-label', state.lang === 'en' ? 'हिंदी में देखें' : 'View in English');
+  $('langSelect').value = state.lang;
   renderCategories();
   renderWorkers();
 }
@@ -90,6 +112,7 @@ function categoryTile(job) {
 
 function selectJob(job) {
   state.job = job;
+  if (job !== 'all') track('category', { value: job });
   renderCategories();
   renderWorkers();
   // On phones the list sits below the grid — bring it into view
@@ -133,7 +156,9 @@ function workerCard(worker, index) {
   const badge = el('p',
     'mt-3 inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700');
   badge.append(icon('check', 'h-3.5 w-3.5'), el('span', '', t('verified')));
-  info.append(el('h3', 'break-words text-base font-semibold leading-snug sm:text-lg', worker.name), job, badge);
+  const exp = el('p', 'mt-0.5 flex items-center gap-1.5 text-sm text-neutral-500');
+  exp.append(el('span', '', '🛠️'), el('span', '', t('experience', { n: worker.experience ?? 5 })));
+  info.append(el('h3', 'break-words text-base font-semibold leading-snug sm:text-lg', worker.name), job, exp, badge);
 
   const side = el('div', 'flex w-24 shrink-0 flex-col items-center');
   const avatar = el('div',
@@ -171,7 +196,7 @@ async function revealNumber(worker, btn, actions) {
     const res = await fetch(`/api/number?id=${encodeURIComponent(worker.id)}`);
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      showToast((state.lang === 'hi' && data.error_hi) || data.error || t('error'), 'error');
+      showToast(data[`error_${state.lang}`] || data.error || t('error'), 'error');
       throw new Error('handled');
     }
     state.revealed.set(worker.id, data);
@@ -193,6 +218,7 @@ function showActions(worker, data, btn, actions) {
   const call = el('a', 'btn btn-dark');
   call.href = `tel:+91${data.phone}`;
   call.append(icon('phone'), el('span', '', t('call')));
+  call.addEventListener('click', () => track('call', { workerId: worker.id }));
   row.append(call);
 
   if (data.whatsapp) {
@@ -206,6 +232,7 @@ function showActions(worker, data, btn, actions) {
     wa.target = '_blank';
     wa.rel = 'noopener noreferrer';
     wa.append(icon('chat'), el('span', '', t('whatsapp')));
+    wa.addEventListener('click', () => track('whatsapp', { workerId: worker.id }));
     row.append(wa);
   }
 
@@ -273,8 +300,8 @@ async function loadJobs(workersReady) {
 
 // ─── Events ───
 
-$('langToggle').addEventListener('click', () => {
-  state.lang = state.lang === 'en' ? 'hi' : 'en';
+$('langSelect').addEventListener('change', (e) => {
+  state.lang = LANGS.includes(e.target.value) ? e.target.value : 'en';
   store.set(LANG_KEY, state.lang);
   applyTranslations();
 });
@@ -294,3 +321,11 @@ $('clearFilter').addEventListener('click', () => selectJob('all'));
 
 applyTranslations();
 loadJobs(loadWorkers());
+
+// One visit per browser session
+try {
+  if (!sessionStorage.getItem(VISIT_KEY)) {
+    sessionStorage.setItem(VISIT_KEY, '1');
+    track('visit');
+  }
+} catch { /* storage blocked — skip */ }
