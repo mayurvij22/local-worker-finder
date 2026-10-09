@@ -87,6 +87,14 @@
               <label class="field-label" for="workerJob">Job category</label>
               <select id="workerJob" class="field"><option value="">Select job…</option></select>
             </div>
+            <div class="sm:col-span-2 lg:col-span-1">
+              <label class="field-label" for="workerPhoto">Photo link <span class="font-normal text-neutral-400">(optional)</span></label>
+              <div class="flex items-center gap-3">
+                <img id="workerPhotoPreview" alt="" referrerpolicy="no-referrer" class="h-12 w-12 shrink-0 rounded-xl bg-neutral-100 object-cover" hidden />
+                <input id="workerPhoto" type="url" inputmode="url" class="field min-w-0 flex-1" placeholder="https://drive.google.com/file/d/…" />
+              </div>
+              <p class="mt-1.5 text-xs text-neutral-500">Upload to Google Drive → Share → “Anyone with the link” → Copy link.</p>
+            </div>
           </div>
           <label class="mt-4 flex min-h-[44px] cursor-pointer items-center gap-3 text-sm font-medium">
             <input id="workerWhatsApp" type="checkbox" class="h-5 w-5 accent-neutral-900" />
@@ -206,6 +214,14 @@
         <div>
           <label class="field-label" for="editJob">Job category</label>
           <select id="editJob" class="field"></select>
+        </div>
+        <div class="sm:col-span-2 lg:col-span-1">
+          <label class="field-label" for="editPhoto">Photo link <span class="font-normal text-neutral-400">(optional)</span></label>
+          <div class="flex items-center gap-3">
+            <img id="editPhotoPreview" alt="" referrerpolicy="no-referrer" class="h-12 w-12 shrink-0 rounded-xl bg-neutral-100 object-cover" hidden />
+            <input id="editPhoto" type="url" inputmode="url" class="field min-w-0 flex-1" placeholder="https://drive.google.com/file/d/…" />
+          </div>
+          <p class="mt-1.5 text-xs text-neutral-500">Upload to Google Drive → Share → “Anyone with the link” → Copy link.</p>
         </div>
       </div>
       <label class="mt-4 flex min-h-[44px] cursor-pointer items-center gap-3 text-sm font-medium">

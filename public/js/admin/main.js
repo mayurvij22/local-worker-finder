@@ -44,6 +44,45 @@ async function withBusy(btn, busyText, fn) {
 const isPhone = (v) => /^\d{10}$/.test(v);
 const isExperience = (v) => /^\d{1,2}$/.test(v) && Number(v) <= 60;
 
+// ─── Photos (Google Drive share links — same rules as lib/sheets.js) ───
+
+function drivePhotoSrc(link) {
+  const m = String(link || '').trim().match(/^https:\/\/(?:drive|docs)\.google\.com\/.*?(?:\/d\/|[?&]id=)([\w-]{20,})/);
+  return m ? `https://drive.google.com/thumbnail?id=${m[1]}&sz=w400` : '';
+}
+const isPhoto = (v) => !v || Boolean(drivePhotoSrc(v));
+
+/** Show a live preview next to a photo-link input; returns a refresh function. */
+function wirePhotoPreview(input, img) {
+  const update = () => {
+    const src = drivePhotoSrc(input.value);
+    img.hidden = !src;
+    if (src && img.src !== src) img.src = src;
+  };
+  img.addEventListener('error', () => { img.hidden = true; });
+  input.addEventListener('input', update);
+  return update;
+}
+const updateWorkerPreview = wirePhotoPreview($('workerPhoto'), $('workerPhotoPreview'));
+const updateEditPreview = wirePhotoPreview($('editPhoto'), $('editPhotoPreview'));
+
+/** Small round photo (initials until it loads, or if it fails) for the worker list. */
+function thumb(w) {
+  const box = el('span',
+    'flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-xs font-bold text-neutral-500',
+    w.name.split(' ').filter(Boolean).map((p) => p[0]).join('').slice(0, 2).toUpperCase());
+  box.setAttribute('aria-hidden', 'true');
+  if (w.photoSrc) {
+    const img = el('img', 'h-full w-full object-cover');
+    img.alt = '';
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.src = w.photoSrc;
+    img.addEventListener('load', () => box.replaceChildren(img));
+  }
+  return box;
+}
+
 // ═══ Login / logout ═══
 
 $('loginForm').addEventListener('submit', (e) => {
@@ -170,8 +209,10 @@ function renderWorkers() {
   body.replaceChildren(...state.workers.map((w) => {
     const tr = el('tr', 'transition hover:bg-neutral-50');
     const name = el('td', 'px-4 py-3 font-semibold');
-    name.append(el('span', '', w.name));
-    if (w.whatsapp) name.append(el('span', 'ml-2 rounded bg-[#25D366]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#128C7E]', 'WA'));
+    const who = el('div', 'flex items-center gap-3');
+    who.append(thumb(w), el('span', '', w.name));
+    name.append(who);
+    if (w.whatsapp) who.append(el('span', 'ml-2 rounded bg-[#25D366]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#128C7E]', 'WA'));
     const status = el('td', 'px-4 py-3');
     status.append(statusBadge(w.active));
     const actions = el('td', 'px-4 py-3');
@@ -190,13 +231,13 @@ function renderWorkers() {
 
   cards.replaceChildren(...state.workers.map((w) => {
     const card = el('div', 'card p-4');
-    const head = el('div', 'flex items-start justify-between gap-3');
-    const who = el('div', 'min-w-0');
+    const head = el('div', 'flex items-start gap-3');
+    const who = el('div', 'min-w-0 flex-1');
     who.append(
       el('p', 'break-words font-semibold', w.name),
       el('p', 'mt-0.5 text-sm text-neutral-500', `${w.job} · ${w.experience}+ yrs · ${w.phone}${w.whatsapp ? ' · WhatsApp' : ''}`),
     );
-    head.append(who, statusBadge(w.active));
+    head.append(thumb(w), who, statusBadge(w.active));
     const row = el('div', 'mt-4 flex gap-2 border-t border-neutral-100 pt-3');
     row.append(...actionButtons(w, true));
     card.append(head, row);
@@ -248,19 +289,22 @@ $('addWorkerForm').addEventListener('submit', (e) => {
   const phone = $('workerPhone').value.trim();
   const job = $('workerJob').value;
   const experience = $('workerExperience').value.trim() || '5';
+  const photo = $('workerPhoto').value.trim();
 
   if (!name) { showToast('Please enter worker name.', 'error'); return $('workerName').focus(); }
   if (!isPhone(phone)) { showToast('Phone must be exactly 10 digits.', 'error'); return $('workerPhone').focus(); }
   if (!isExperience(experience)) { showToast('Experience must be 0–60 years.', 'error'); return $('workerExperience').focus(); }
   if (!job) { showToast('Please select a job category.', 'error'); return $('workerJob').focus(); }
+  if (!isPhoto(photo)) { showToast('Photo must be a Google Drive link.', 'error'); return $('workerPhoto').focus(); }
 
   withBusy($('addWorkerBtn'), 'Adding…', async () => {
     const res = await adminAPI({
-      action: 'addWorker', name, phone, job, experience: Number(experience), whatsapp: $('workerWhatsApp').checked,
+      action: 'addWorker', name, phone, job, photo, experience: Number(experience), whatsapp: $('workerWhatsApp').checked,
     });
     if (!res.ok) return showToast(res.data.error || 'Failed to add worker.', 'error');
     showToast('Worker added!', 'success');
     e.target.reset();
+    updateWorkerPreview();
     loadWorkers();
   });
 });
@@ -277,6 +321,8 @@ function openEdit(w) {
   $('editExperience').value = w.experience;
   $('editActive').checked = w.active;
   $('editWhatsApp').checked = w.whatsapp;
+  $('editPhoto').value = w.photo || '';
+  updateEditPreview();
   fillJobSelect($('editJob'), w.job);
   openModal($('editModal'));
   $('editName').focus();
@@ -288,15 +334,17 @@ $('editForm').addEventListener('submit', (e) => {
   const phone = $('editPhone').value.trim();
   const job = $('editJob').value;
   const experience = $('editExperience').value.trim() || '5';
+  const photo = $('editPhoto').value.trim();
 
   if (!name) return showToast('Name is required.', 'error');
   if (!isPhone(phone)) return showToast('Phone must be 10 digits.', 'error');
   if (!isExperience(experience)) return showToast('Experience must be 0–60 years.', 'error');
   if (!job) return showToast('Job is required.', 'error');
+  if (!isPhoto(photo)) return showToast('Photo must be a Google Drive link.', 'error');
 
   withBusy($('editSaveBtn'), 'Saving…', async () => {
     const res = await adminAPI({
-      action: 'updateWorker', id: $('editId').value, name, phone, job, experience: Number(experience),
+      action: 'updateWorker', id: $('editId').value, name, phone, job, photo, experience: Number(experience),
       active: $('editActive').checked, whatsapp: $('editWhatsApp').checked,
     });
     if (!res.ok) return showToast(res.data.error || 'Failed to update.', 'error');

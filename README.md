@@ -54,15 +54,19 @@ Open your Google Sheet and create **two tabs** (the tabs at the bottom of the sh
 #### Tab 1: "Workers"
 Rename the first tab to exactly **Workers** and add these headers in Row 1:
 
-| A (ID) | B (Name) | C (Phone) | D (Job) | E (Active) | F (WhatsApp) | G (Experience) |
-|--------|----------|-----------|---------|------------|--------------|----------------|
-| ID     | Name     | Phone     | Job     | Active     | WhatsApp     | Experience     |
+| A (ID) | B (Name) | C (Phone) | D (Job) | E (Active) | F (WhatsApp) | G (Experience) | H (Photo) |
+|--------|----------|-----------|---------|------------|--------------|----------------|-----------|
+| ID     | Name     | Phone     | Job     | Active     | WhatsApp     | Experience     | Photo     |
 
 - **ID** — Will be auto-generated when you add workers from admin
 - **Phone** — 10 digits only, no +91 (e.g., `9876543210`)
 - **Active** — `Yes` or `No`
 - **WhatsApp** — `Yes` or `No`
 - **Experience** — years, shown as "5+ years". Empty means 5. To fill 5 for every existing worker: `node --env-file=.env scripts/set-default-experience.js`
+- **Photo** — optional Google Drive link to the worker's photo. Empty means the coloured initials are shown.
+  1. Upload the photo to Google Drive
+  2. Right-click it → **Share** → General access: **Anyone with the link** (Viewer)
+  3. **Copy link** and paste it into the "Photo link" box in admin (Add or Edit worker)
 
 #### Tab 2: "Jobs"
 Create a second tab named exactly **Jobs** and add this header in Row 1:
@@ -233,7 +237,8 @@ Open these URLs in your browser:
 |---|---|
 | "Failed to load workers" | Check that the sheet is shared with the service account email as **Editor** |
 | Auth/permission errors | Verify `GOOGLE_PRIVATE_KEY` is correct in Vercel env vars. Redeploy after changes. |
-| Workers don't appear | Make sure the Workers tab has the header row: `ID, Name, Phone, Job, Active, WhatsApp, Experience` |
+| Workers don't appear | Make sure the Workers tab has the header row: `ID, Name, Phone, Job, Active, WhatsApp, Experience, Photo` |
+| Photo not showing (initials instead) | The Drive file must be shared as **Anyone with the link**. Open the link in a private window to check. |
 | Admin login fails | Check `ADMIN_PASSWORD` env variable in Vercel matches what you're typing |
 | Changes not showing | The cache refreshes every 60 seconds. Wait or open in incognito. |
 | "Too many requests" | Rate limit hit. Wait 1 minute (or 24 hours for daily limit). |

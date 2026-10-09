@@ -162,10 +162,19 @@ function workerCard(worker, index) {
 
   const side = el('div', 'flex w-24 shrink-0 flex-col items-center');
   const avatar = el('div',
-    'flex h-20 w-20 items-center justify-center rounded-2xl text-xl font-bold tracking-wide text-white shadow-inner',
+    'flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl text-xl font-bold tracking-wide text-white shadow-inner',
     initials(worker.name));
   avatar.style.background = avatarColor(worker.name);
   avatar.setAttribute('aria-hidden', 'true');
+  if (worker.photo) {
+    // Swap in the photo only once it loads — a broken or private Drive link keeps the initials
+    const img = el('img', 'h-full w-full object-cover');
+    img.alt = '';
+    img.loading = 'lazy';
+    img.referrerPolicy = 'no-referrer';
+    img.src = worker.photo;
+    img.addEventListener('load', () => avatar.replaceChildren(img));
+  }
 
   const showBtn = el('button',
     'relative -mt-4 inline-flex h-9 min-w-[6.25rem] items-center justify-center whitespace-nowrap rounded-lg border ' +

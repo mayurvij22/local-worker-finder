@@ -14,6 +14,14 @@ function toExperience(value) {
   const n = Number(value);
   return value !== '' && Number.isInteger(n) && n >= 0 && n <= 60 ? n : sheets.DEFAULT_EXPERIENCE;
 }
+
+/** Photo link from the form → clean Drive link, '' for none, or null if it isn't a Drive link. */
+function toPhoto(value) {
+  if (!value || !String(value).trim()) return '';
+  return sheets.drivePhotoLink(value) || null;
+}
+const PHOTO_ERROR = 'Photo must be a Google Drive file link (Share → Copy link).';
+
 const { adminLogin } = require('../lib/ratelimit');
 
 module.exports = async function handler(req, res) {
@@ -57,6 +65,7 @@ module.exports = async function handler(req, res) {
 
       case 'addWorker': {
         const { name, phone, job, whatsapp, experience } = body;
+        const photo = toPhoto(body.photo);
 
         // Validate required fields
         if (!name || !phone || !job) {
@@ -68,6 +77,9 @@ module.exports = async function handler(req, res) {
             .status(400)
             .json({ error: 'Phone must be exactly 10 digits (no +91).' });
         }
+        if (photo === null) {
+          return res.status(400).json({ error: PHOTO_ERROR });
+        }
 
         const id = await sheets.addWorker({
           name: name.trim().substring(0, 100),
@@ -75,6 +87,7 @@ module.exports = async function handler(req, res) {
           job: job.trim().substring(0, 50),
           whatsapp: whatsapp === true || whatsapp === 'Yes',
           experience: toExperience(experience),
+          photo,
         });
 
         return res.status(201).json({ success: true, id });
@@ -82,6 +95,7 @@ module.exports = async function handler(req, res) {
 
       case 'updateWorker': {
         const { id, name, phone, job, active, whatsapp, experience } = body;
+        const photo = toPhoto(body.photo);
         if (!id) {
           return res.status(400).json({ error: 'Worker ID is required.' });
         }
@@ -89,6 +103,9 @@ module.exports = async function handler(req, res) {
           return res
             .status(400)
             .json({ error: 'Phone must be exactly 10 digits.' });
+        }
+        if (photo === null) {
+          return res.status(400).json({ error: PHOTO_ERROR });
         }
 
         const updated = await sheets.updateWorker(id, {
@@ -98,6 +115,7 @@ module.exports = async function handler(req, res) {
           active: active === true || active === 'Yes',
           whatsapp: whatsapp === true || whatsapp === 'Yes',
           experience: toExperience(experience),
+          photo,
         });
 
         if (!updated) {
