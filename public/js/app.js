@@ -363,14 +363,11 @@
 
         // WhatsApp button (only if the worker has WhatsApp)
         if (data.whatsapp) {
-          var waText;
-          if (currentLang === 'hi') {
-            waText = 'नमस्ते, मुझे आपका नंबर न्यू योगेश्वर इलेक्ट्रिक & नल फिटिंग से मिला। मुझे '
-              + worker.job + ' की ज़रूरत है। क्या आप उपलब्ध हैं?';
-          } else {
-            waText = 'Namaste, I found your contact through New Yogeshwar Electric & Nal Fitting. I need a '
-              + worker.job + '. Are you available?';
-          }
+          // Always Marathi — workers are local, whatever language the customer browses in
+          var waText = 'नमस्कार 🙏\n\n'
+            + 'मला तुमचा संपर्क *न्यू योगेश्वर इलेक्ट्रिक & नल फिटिंग* कडून मिळाला.\n'
+            + 'मला *' + worker.job + '* ची गरज आहे.\n\n'
+            + 'तुम्ही उपलब्ध आहात का?';
 
           var waLink = document.createElement('a');
           waLink.href = 'https://wa.me/91' + data.phone + '?text=' + encodeURIComponent(waText);
