@@ -79,8 +79,13 @@ module.exports = async function handler(req, res) {
 
     // Message for the shop owner, opened by the customer via WhatsApp
     const message =
-      `New Booking: ${customerName} (${customerPhone}) at ${address} ` +
-      `needs ${jobCategory} from ${workerName}`;
+      `🔔 *नवीन बुकिंग*\n\n` +
+      `👤 *ग्राहक:* ${customerName}\n` +
+      `📞 *मोबाईल:* ${customerPhone}\n` +
+      `📍 *पत्ता:* ${address}\n` +
+      `🛠️ *काम:* ${jobCategory}\n` +
+      `👷 *कारागीर:* ${workerName}\n\n` +
+      `कृपया ग्राहकाशी संपर्क साधून काम निश्चित करावे. धन्यवाद! 🙏`;
     const whatsappUrl =
       `https://wa.me/91${SHOP_WHATSAPP}?text=${encodeURIComponent(message)}`;
 
