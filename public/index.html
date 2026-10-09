@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#1e1b4b" />
-  <title>New Yogeshwar Electric &amp; Nal Fitting — Find Workers</title>
-  <meta name="description" content="Find trusted local electricians, plumbers, AC technicians, painters, and carpenters. Scan the QR code at New Yogeshwar Electric & Nal Fitting, Amalner." />
+  <title>New Yogeshwar Electric &amp; Nal Fitting — Book a Worker</title>
+  <meta name="description" content="Book trusted local electricians, plumbers, AC technicians, painters, and carpenters. Scan the QR code at New Yogeshwar Electric & Nal Fitting, Amalner." />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
@@ -20,7 +23,7 @@
         <div class="shop-icon" aria-hidden="true">⚡</div>
         <div>
           <h1 class="shop-name" id="shopName">New Yogeshwar Electric &amp; Nal Fitting</h1>
-          <p class="shop-tagline" id="tagline">Find trusted local workers</p>
+          <p class="shop-tagline" id="tagline">Book trusted local workers</p>
         </div>
       </div>
       <button class="lang-toggle" id="langToggle" aria-label="Switch language">हिं</button>
@@ -31,7 +34,7 @@
   <section class="hero">
     <div class="hero-inner">
       <h2 id="heroTitle">Need a skilled worker?</h2>
-      <p id="heroText">Electricians, plumbers, painters &amp; more — call or WhatsApp directly.</p>
+      <p id="heroText">Electricians, plumbers, painters &amp; more — book in under a minute.</p>
       <div class="hero-contact">
         <a class="hero-chip" href="https://www.google.com/maps/search/?api=1&query=Sane+Nagar+Amalner+Maharashtra+425401" target="_blank" rel="noopener noreferrer">
           <span aria-hidden="true">📍</span> <span id="shopAddress">Sane Nagar, Amalner, Maharashtra 425401</span>
@@ -92,9 +95,63 @@
     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
   </a>
 
+  <!-- Booking form overlay -->
+  <div class="modal-overlay hidden" id="bookModal" role="dialog" aria-modal="true" aria-labelledby="bookTitle">
+    <div class="modal-card">
+
+      <!-- Step 1: the form -->
+      <form id="bookForm" novalidate>
+        <h3 id="bookTitle">Book a worker</h3>
+        <p class="book-worker" id="bookWorker"></p>
+
+        <div class="form-group">
+          <label for="custName" id="lblName">Your name</label>
+          <input type="text" id="custName" maxlength="100" autocomplete="name" required />
+        </div>
+        <div class="form-group">
+          <label for="custPhone" id="lblPhone">Phone (10 digits)</label>
+          <input type="tel" id="custPhone" maxlength="10" inputmode="numeric" autocomplete="tel-national" required />
+        </div>
+        <div class="form-group">
+          <label for="custAddress" id="lblAddress">Address</label>
+          <textarea id="custAddress" rows="3" maxlength="300" autocomplete="street-address" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="custJob" id="lblJob">Job</label>
+          <select id="custJob" required></select>
+        </div>
+
+        <p class="form-error hidden" id="formError" role="alert"></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="bookCancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="bookSubmit">Submit</button>
+        </div>
+      </form>
+
+      <!-- Step 2: confirmation -->
+      <div class="book-done hidden" id="bookDone">
+        <div class="done-icon" aria-hidden="true">✓</div>
+        <h3 id="doneTitle">Booking received!</h3>
+        <p id="doneText"></p>
+        <a class="btn btn-whatsapp" id="doneWhatsApp" href="#" target="_blank" rel="noopener noreferrer"></a>
+        <button type="button" class="btn btn-outline" id="doneClose">Close</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast" role="alert"></div>
 
   <script src="/js/app.js"></script>
+  <script>
+    // Register the service worker so the site can be installed as an app
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () { /* not critical */ });
+      });
+    }
+  </script>
 </body>
 </html>

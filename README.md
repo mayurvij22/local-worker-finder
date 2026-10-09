@@ -1,62 +1,69 @@
-# Yogeshwar Electric Shop — Worker Directory
+# New Yogeshwar Electric & Nal Fitting — Worker Booking
 
-Customers scan a QR code at your shop, pick a job category, and tap to call or WhatsApp a worker.  
-You manage everything from a password-protected admin page.
+Customers scan a QR code at your shop, see all available workers (experience + skills), and tap **Book Now**.
+The booking is saved in your Google Sheet and the customer sends the details to the shop on WhatsApp.
+You manage workers from a password-protected admin page. Bookings delete themselves after 7 days.
 
 ---
 
 ## 📁 Folder Structure
 
 ```
-yogeshwar/
 ├── public/               ← Static files (customer + admin pages)
 │   ├── index.html        ← Customer page (QR code lands here)
 │   ├── admin.html        ← Admin dashboard
 │   ├── css/style.css     ← All styles
 │   └── js/
-│       ├── app.js        ← Customer page logic
+│       ├── app.js        ← Customer page logic (workers, booking form)
 │       └── admin.js      ← Admin page logic
 ├── api/                  ← Vercel serverless functions
-│   ├── workers.js        ← GET  /api/workers (public, no phones)
-│   ├── number.js         ← GET  /api/number?id=X (rate-limited)
-│   ├── jobs.js           ← GET  /api/jobs
-│   └── admin.js          ← POST /api/admin (password-protected)
+│   ├── workers.js        ← GET  /api/workers   (active workers)
+│   ├── jobs.js           ← GET  /api/jobs      (job categories)
+│   ├── booking.js        ← POST /api/booking   (save booking, 10 per IP per hour)
+│   ├── cleanup.js        ← GET  /api/cleanup   (daily cron: delete bookings older than 7 days)
+│   └── admin.js          ← POST /api/admin     (password-protected)
 ├── lib/
-│   ├── sheets.js         ← Google Sheets API helper
+│   ├── sheets.js         ← Google Sheets helper
 │   └── ratelimit.js      ← In-memory rate limiter
 ├── package.json
-├── vercel.json
+├── vercel.json           ← Cache headers + daily cleanup schedule
 └── README.md             ← You are here
 ```
 
+## 🔄 How a booking works
+
+1. Customer taps **Book Now** on a worker → fills name, phone (10 digits), address, job → **Submit**.
+2. The server checks everything and adds a row to the **Bookings** tab (status `New`).
+3. The customer sees "Booking received!" and taps **Send on WhatsApp**. WhatsApp opens with this message already typed, addressed to the shop (8208104775):
+   `New Booking: Anil (9876543210) at 12 Main Road needs Electrician from Ramesh Singh`
+4. The customer presses **Send**. That is when the shop gets the WhatsApp message.
+   (The booking is in the Google Sheet either way, so nothing is lost if they skip this step.)
+
+> The shop WhatsApp number is set at the top of [api/booking.js](api/booking.js) (`SHOP_WHATSAPP`). Change it there if it ever changes.
+
 ---
 
-## 🛠️ Complete Setup Guide (Beginner-Friendly)
+## 🛠️ Setup Guide (Beginner-Friendly)
 
-### Step 1: Set Up Your Google Sheet
+### Step 1: Set up your Google Sheet
 
-Open your Google Sheet and create **two tabs** (the tabs at the bottom of the sheet):
+Create these tabs at the bottom of your Google Sheet. **Spelling must match exactly.**
 
-#### Tab 1: "Workers"
-Rename the first tab to exactly **Workers** and add these headers in Row 1:
+#### Tab "Workers" — Row 1 headers:
 
-| A (ID) | B (Name) | C (Phone) | D (Job) | E (Active) | F (WhatsApp) |
-|--------|----------|-----------|---------|------------|---------------|
-| ID     | Name     | Phone     | Job     | Active     | WhatsApp      |
+| A | B | C | D | E |
+|---|---|---|---|---|
+| ID | Name | Experience | JobCategories | Active |
 
-- **ID** — Will be auto-generated when you add workers from admin
-- **Phone** — 10 digits only, no +91 (e.g., `9876543210`)
+- **ID** — made automatically when you add workers from the admin page. If you type a row in the sheet yourself, put any unique text here (e.g. `W100`).
+- **Experience** — a number of years (e.g. `8`)
+- **JobCategories** — comma-separated, e.g. `Electrician, AC Technician`
 - **Active** — `Yes` or `No`
-- **WhatsApp** — `Yes` or `No`
 
-#### Tab 2: "Jobs"
-Create a second tab named exactly **Jobs** and add this header in Row 1:
+> ⚠️ **If you used the older version of this app**, the Workers tab had columns `ID | Name | Phone | Job | Active | WhatsApp`. Change the headers to the ones above, put the years of experience in column C, and clear column F — otherwise phone numbers will show up as "experience".
 
-| A (JobName) |
-|-------------|
-| JobName     |
+#### Tab "Jobs" — Row 1 header `JobName`, then rows 2–6:
 
-Then add your starting jobs in rows 2–6:
 ```
 Electrician
 Plumber
@@ -65,156 +72,144 @@ Painter
 Carpenter
 ```
 
-#### Share the Sheet with the Service Account
-1. Click the **Share** button (top-right of the sheet)
-2. Paste this email: `worker-app@yogeshwar-worker-app.iam.gserviceaccount.com`
-3. Set permission to **Editor**
-4. Uncheck "Notify people" and click Share
+#### Tab "Bookings"
+Nothing to do — it is **created automatically** with the right headers on the first booking:
+`ID | CustomerName | CustomerPhone | Address | JobCategory | WorkerName | Timestamp | Status`
 
----
+#### Share the Sheet with the service account
+1. Click **Share** (top-right of the sheet)
+2. Paste: `worker-app@yogeshwar-worker-app.iam.gserviceaccount.com`
+3. Permission: **Editor** → untick "Notify people" → Share
 
-### Step 2: Google Cloud Project (Already Done)
+### Step 2: Google Cloud (already done)
 
-You already have:
 - Project: `yogeshwar-worker-app`
-- Service Account: `worker-app@yogeshwar-worker-app.iam.gserviceaccount.com`
-- Sheets API enabled
+- Service account: `worker-app@yogeshwar-worker-app.iam.gserviceaccount.com`
+- Google Sheets API enabled
 
-> ⚠️ **IMPORTANT**: If you shared your private key publicly, go to  
-> [Google Cloud Console → IAM → Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)  
-> → Click your service account → Keys tab → **Delete the old key** → **Create a new key** (JSON)
+> ⚠️ If you ever shared your private key publicly: [Google Cloud Console → IAM → Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) → your service account → Keys → delete the old key → create a new JSON key.
 
----
+### Step 3: Choose an admin password
 
-### Step 3: Choose an Admin Password
+Pick a strong one, e.g. `MyShop@2024!`. You'll set it as `ADMIN_PASSWORD` in Vercel.
 
-Pick a strong password for the admin page. Example: `MyShop@2024!`  
-You'll set this as the `ADMIN_PASSWORD` environment variable in Vercel.
-
----
-
-### Step 4: Push Code to GitHub
-
-Open a terminal in the `yogeshwar` folder and run:
+### Step 4: Push the code to GitHub
 
 ```bash
 git add .
-git commit -m "Initial commit - worker directory app"
-git branch -M main
-git push -u origin main
+git commit -m "Worker booking app"
+git push
 ```
-
-If you haven't set up the remote yet:
-```bash
-git remote add origin https://github.com/mayurvij22/local-worker-finder.git
-git push -u origin main
-```
-
----
 
 ### Step 5: Deploy to Vercel
 
-1. Go to [vercel.com](https://vercel.com) and sign in with GitHub
-2. Click **"Add New" → Project**
-3. Select the **local-worker-finder** repository
-4. Leave all settings as default (Framework: Other)
-5. Before clicking Deploy, add **Environment Variables**:
+1. Go to [vercel.com](https://vercel.com) → sign in with GitHub → **Add New → Project**
+2. Pick your repository, leave settings as default (Framework: Other)
+3. Add these **Environment Variables**, then click **Deploy**:
 
-| Variable Name | Value |
+| Variable | Value |
 |---|---|
-| `GOOGLE_SHEET_ID` | `16mu-7q9hQK1JxuhOlap7MgSAE82ZnrWIu3oEeKyKAV8` |
+| `GOOGLE_SHEET_ID` | The long ID in your sheet's URL (between `/d/` and `/edit`) |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | `worker-app@yogeshwar-worker-app.iam.gserviceaccount.com` |
-| `GOOGLE_PRIVATE_KEY` | *(see below)* |
-| `ADMIN_PASSWORD` | Your chosen password (e.g., `MyShop@2024!`) |
+| `GOOGLE_PRIVATE_KEY` | The `private_key` value from your JSON key file (including the BEGIN/END lines) |
+| `ADMIN_PASSWORD` | Your admin password |
+| `CRON_SECRET` *(recommended)* | Any long random text. Stops strangers from calling the cleanup URL. |
 
-#### How to paste the Private Key in Vercel:
-1. Open your downloaded JSON key file
-2. Copy the entire `private_key` value (including `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----`)
-3. In Vercel's environment variable input, paste it directly
-4. Vercel handles the `\n` characters automatically
+> 💡 If you get auth errors, paste the private key again with double quotes around it, and redeploy.
 
-> 💡 **Tip**: If you get auth errors after deploying, try wrapping the key in double quotes when pasting, or replace all `\n` with actual line breaks.
+> Rate limiting is done in memory (no Redis account needed), and WhatsApp uses a plain link (no Twilio/Make.com), so there are no extra accounts or variables.
 
-6. Click **Deploy**
+### Step 6: Generate a QR code
 
----
+1. Take your Vercel URL (e.g. `https://your-app.vercel.app`)
+2. Go to [qr-code-generator.com](https://www.qr-code-generator.com/) (or any free QR tool) and paste the URL
+3. Download it, print it, and put it at your shop counter
 
-### Step 6: Generate a QR Code
+### Step 7 (optional): Make an Android APK to share (no Play Store)
 
-After deployment, Vercel gives you a URL like `https://your-app.vercel.app`.
+The site is an installable app (PWA). To turn it into an `.apk` file you can send on WhatsApp:
 
-1. Go to [qr-code-generator.com](https://www.qr-code-generator.com/) or any QR tool
-2. Enter your Vercel URL (e.g., `https://local-worker-finder.vercel.app`)
-3. Download and print the QR code
-4. Place it at your shop counter!
+1. Deploy to Vercel first (Step 5) and open your URL on a phone once to check it loads.
+2. Go to [pwabuilder.com](https://www.pwabuilder.com), paste your Vercel URL, click **Start**.
+3. Click **Package for stores → Android**. Fill in:
+   - Package ID: `in.yogeshwar.workers` (any `xxx.yyy.zzz` text; keep it the same forever)
+   - App name: `New Yogeshwar Electric & Nal Fitting`
+   - Signing key: choose **Create new**
+4. Download the zip. Inside you'll find:
+   - the **`.apk`** file → this is what you share
+   - a **signing key file + passwords** → **keep these safe**; you need the same key to make updates
+   - `assetlinks.json` (see below)
+5. Send the `.apk` to customers (WhatsApp, Drive, etc.). On their phone: open the file → allow **"Install unknown apps"** when asked → Install. Google Play Protect may show a "not scanned" warning; tap **Install anyway**.
 
----
+**Hide the address bar (recommended):** take the `assetlinks.json` from the zip and save it in this project as `public/.well-known/assetlinks.json`, then push to GitHub so Vercel redeploys. Without it the app still works, but shows a thin browser bar at the top.
 
-## ✅ How to Test After Deployment
-
-### Test the Customer Page
-1. Open `https://your-app.vercel.app` on your phone
-2. You should see the shop name and job filter buttons
-3. Toggle Hindi/English with the language button
-4. If you've added workers, tap "Show Number" to see the phone number
-5. Tap "Call" or "WhatsApp" to verify links work
-
-### Test the Admin Page
-1. Open `https://your-app.vercel.app/admin.html`
-2. Log in with your admin password
-3. **Add a worker**: Fill in name, phone (10 digits), select job, check WhatsApp if applicable
-4. **Edit a worker**: Click ✏️ Edit, modify details, save
-5. **Delete a worker**: Click 🗑️, confirm deletion
-6. Switch to the **Jobs** tab to add/remove job categories
-7. Go back to the customer page to verify your changes appear
-
-### Test Rate Limiting
-1. On the customer page, rapidly click "Show Number" on different workers
-2. After ~10 clicks in a minute, you should see a "Too many requests" message
-
-### Test the API Directly
-Open these URLs in your browser:
-- `https://your-app.vercel.app/api/workers` → Should show workers (no phone numbers)
-- `https://your-app.vercel.app/api/jobs` → Should show job categories
-- `https://your-app.vercel.app/api/number?id=INVALID` → Should show "Worker not found"
+**Updates:** the app loads your live website, so changes to workers, text and design appear automatically. You only need a new APK if you change the app name or icon.
 
 ---
 
-## 🔒 Security Notes
+## ✅ How to Test
 
-- ✅ Phone numbers are **never** sent in bulk — only one at a time via `/api/number`
-- ✅ `/api/number` is rate-limited (10/minute, 30/day per IP)
-- ✅ Admin password is checked **server-side** on every request
-- ✅ All user data is rendered with `textContent` (no XSS risk)
-- ✅ Service account key is only in Vercel env variables, never in code
-- ✅ Worker list in browser cache contains **no phone numbers**
+### Customer page
+1. Open your Vercel URL on a phone. You should see worker cards with experience and skill tags.
+2. Tap a job filter, type in the search box, and switch हिं / EN.
+3. Tap **Book Now** → try submitting with a 5-digit phone number → you should see an error.
+4. Fill it properly → **Submit** → "Booking received!" → tap **Send on WhatsApp** → WhatsApp opens with the message typed.
+5. Open the Google Sheet → a **Bookings** tab now exists with your booking (Status `New`).
+
+### Rate limit
+Submit 11 bookings quickly from one phone/network. The 11th shows "Too many bookings…". (The counter resets after an hour.)
+
+### Auto-delete (7 days)
+1. In the Bookings tab, edit a row's **Timestamp** to an old date, e.g. `2024-01-01T10:00:00.000Z`.
+2. Open `https://your-app.vercel.app/api/cleanup` in your browser. (If you set `CRON_SECRET`, the browser will get "Unauthorized". In that case use Vercel dashboard → your project → **Settings → Cron Jobs → Run**.)
+3. You should see `{"success":true,"deleted":1}` and the row disappears.
+
+Vercel also runs this by itself every day at 3 AM UTC.
+
+### Admin page
+1. Open `/admin.html` and log in.
+2. **Add** a worker (name, experience, tick job categories) → **Edit** → **Delete**.
+3. **Jobs** tab: add/remove job categories.
+
+### API URLs
+- `/api/workers` → list of workers
+- `/api/jobs` → list of job categories
 
 ---
 
 ## 📝 Daily Usage
 
-### Adding a new worker
-1. Open `/admin.html` → Login
-2. Fill in name, phone, job → Click "Add Worker"
-3. The worker appears on the customer page within ~60 seconds (cache refresh)
+### Add / edit workers
+- **Easiest:** `/admin.html` → fill the form → **Add Worker**. Use **Edit** to change experience or skills, and untick **Active** to hide a worker.
+- **Or directly in the sheet:** add a row in the Workers tab (ID: any unique text, Active: `Yes`).
+- Changes show up on the customer page within about 60 seconds.
 
-### Hiding a worker temporarily
-1. Admin → Edit the worker → Uncheck "Active" → Save
-2. They won't show up on the customer page, but their data is preserved
+### Add a new job category
+Admin → **Jobs** tab → type the name → **Add**. (Or add a row in the Jobs tab.) Then tick it on the workers who do that job.
 
-### Adding a new job category
-1. Admin → Jobs tab → Type the name → Click "Add"
-2. Now it appears in the job dropdown and customer page filters
+> Hindi names for the 5 starting jobs are built in. A new job shows in English for Hindi users unless added to the `JOB_HI` list in [public/js/app.js](public/js/app.js).
+
+### Seeing bookings
+Open the **Bookings** tab in your Google Sheet. Rows older than 7 days are removed automatically.
 
 ---
+
+## 🔒 Security Notes
+
+- ✅ Secrets (Google key, admin password) live only in Vercel environment variables
+- ✅ All booking input is cleaned and validated on the server (10-digit phone, all fields required, worker and job must exist)
+- ✅ Customer-supplied text is written to the sheet as plain text (never as formulas) and shown with `textContent`
+- ✅ Booking is limited to 10 per IP per hour; admin login to 5 failures per 15 minutes
+- ℹ️ The in-memory limiter resets when Vercel restarts the function, so it is a soft limit — fine for a local shop
 
 ## 🐛 Troubleshooting
 
 | Problem | Solution |
 |---|---|
-| "Failed to load workers" | Check that the sheet is shared with the service account email as **Editor** |
-| Auth/permission errors | Verify `GOOGLE_PRIVATE_KEY` is correct in Vercel env vars. Redeploy after changes. |
-| Workers don't appear | Make sure the Workers tab has the header row: `ID, Name, Phone, Job, Active, WhatsApp` |
-| Admin login fails | Check `ADMIN_PASSWORD` env variable in Vercel matches what you're typing |
-| Changes not showing | The cache refreshes every 60 seconds. Wait or open in incognito. |
-| "Too many requests" | Rate limit hit. Wait 1 minute (or 24 hours for daily limit). |
+| "Failed to load workers" | Make sure the sheet is shared with the service account as **Editor** |
+| Auth/permission errors | Check `GOOGLE_PRIVATE_KEY` in Vercel, then redeploy |
+| Workers show weird experience | Workers tab columns must be `ID, Name, Experience, JobCategories, Active` |
+| Worker not showing | Active must be `Yes`, and JobCategories must not be empty |
+| "no longer available" on booking | Page is out of date (60s cache) — refresh and try again |
+| Admin login fails | `ADMIN_PASSWORD` in Vercel must match what you type |
+| Old bookings not deleting | Check Vercel → Settings → Cron Jobs, and that Timestamp values are real dates |

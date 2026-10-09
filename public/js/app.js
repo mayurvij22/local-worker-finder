@@ -5,8 +5,9 @@
  *  - English / Hindi toggle
  *  - Job filter buttons + name search
  *  - Skeleton loading cards
- *  - Worker cards with "Show Number" → reveals phone, Call, WhatsApp
- *  - Browser cache (localStorage) for worker list (NO phone numbers)
+ *  - Worker cards (name, experience, skills) with a "Book Now" button
+ *  - Booking form overlay → POST /api/booking → WhatsApp link to the shop
+ *  - Browser cache (localStorage) for the worker list
  *  - Background refresh of worker list
  */
 
@@ -23,12 +24,30 @@
       tagline:     'Find trusted local workers',
       search:      'Search by name...',
       allJobs:     'All',
-      showNumber:  'Show Number',
-      call:        'Call',
-      whatsapp:    'WhatsApp',
+      bookNow:     'Book Now',
+      expOne:      '1 year experience',
+      expMany:     ' years experience',
+      expNew:      'New worker',
       noWorkers:   'No workers found',
       heroTitle:   'Need a skilled worker?',
-      heroText:    'Electricians, plumbers, painters & more — call or WhatsApp directly.',
+      heroText:    'Electricians, plumbers, painters & more — book in under a minute.',
+      bookTitle:   'Book a worker',
+      bookWith:    'Worker: ',
+      lblName:     'Your name',
+      lblPhone:    'Phone (10 digits)',
+      lblAddress:  'Address',
+      lblJob:      'Job',
+      submit:      'Submit',
+      sending:     'Sending...',
+      cancel:      'Cancel',
+      close:       'Close',
+      errName:     'Please enter your name.',
+      errPhone:    'Phone number must be exactly 10 digits.',
+      errAddress:  'Please enter your address.',
+      errJob:      'Please choose a job.',
+      doneTitle:   'Booking received!',
+      doneText:    'Your booking is saved. Tap the button below and press Send in WhatsApp so the shop gets your details.',
+      doneWa:      'Send on WhatsApp',
       countOne:    '1 worker available',
       countMany:   ' workers available',
       address:     'Sane Nagar, Amalner, Maharashtra 425401',
@@ -41,12 +60,30 @@
       tagline:     'विश्वसनीय स्थानीय कारीगर खोजें',
       search:      'नाम से खोजें...',
       allJobs:     'सभी',
-      showNumber:  'नंबर दिखाएं',
-      call:        'कॉल करें',
-      whatsapp:    'व्हाट्सएप',
+      bookNow:     'अभी बुक करें',
+      expOne:      '1 वर्ष का अनुभव',
+      expMany:     ' वर्ष का अनुभव',
+      expNew:      'नया कारीगर',
       noWorkers:   'कोई कारीगर नहीं मिला',
       heroTitle:   'कुशल कारीगर चाहिए?',
-      heroText:    'इलेक्ट्रीशियन, प्लंबर, पेंटर और बहुत कुछ — सीधे कॉल या व्हाट्सएप करें।',
+      heroText:    'इलेक्ट्रीशियन, प्लंबर, पेंटर और बहुत कुछ — एक मिनट में बुक करें।',
+      bookTitle:   'कारीगर बुक करें',
+      bookWith:    'कारीगर: ',
+      lblName:     'आपका नाम',
+      lblPhone:    'फ़ोन नंबर (10 अंक)',
+      lblAddress:  'पता',
+      lblJob:      'काम',
+      submit:      'जमा करें',
+      sending:     'भेज रहे हैं...',
+      cancel:      'रद्द करें',
+      close:       'बंद करें',
+      errName:     'कृपया अपना नाम लिखें।',
+      errPhone:    'फ़ोन नंबर ठीक 10 अंकों का होना चाहिए।',
+      errAddress:  'कृपया अपना पता लिखें।',
+      errJob:      'कृपया काम चुनें।',
+      doneTitle:   'बुकिंग मिल गई!',
+      doneText:    'आपकी बुकिंग सेव हो गई है। नीचे बटन दबाएं और व्हाट्सएप में Send दबाएं ताकि दुकान को आपकी जानकारी मिल जाए।',
+      doneWa:      'व्हाट्सएप पर भेजें',
       countOne:    '1 कारीगर उपलब्ध',
       countMany:   ' कारीगर उपलब्ध',
       address:     'सानेनगर, अमळनेर, महाराष्ट्र 425401',
@@ -69,7 +106,7 @@
   // 2. STATE
   // ═══════════════════════════════════════
 
-  var CACHE_KEY = 'yws_workers';
+  var CACHE_KEY = 'yws_workers_v2';   // v2: workers now have experience + jobs[]
   var LANG_KEY  = 'yws_lang';
 
   var currentLang  = localStorage.getItem(LANG_KEY) || 'en';
@@ -95,6 +132,19 @@
   var emptyText    = $('emptyText');
   var toastEl      = $('toast');
 
+  // Booking overlay
+  var bookModal    = $('bookModal');
+  var bookForm     = $('bookForm');
+  var bookWorkerEl = $('bookWorker');
+  var custName     = $('custName');
+  var custPhone    = $('custPhone');
+  var custAddress  = $('custAddress');
+  var custJob      = $('custJob');
+  var formError    = $('formError');
+  var bookSubmit   = $('bookSubmit');
+  var bookDone     = $('bookDone');
+  var bookingWorker = null;   // the worker currently being booked
+
   // ═══════════════════════════════════════
   // 4. HELPERS
   // ═══════════════════════════════════════
@@ -108,6 +158,12 @@
   function jobLabel(name) {
     if (currentLang === 'hi' && JOB_HI[name]) return JOB_HI[name];
     return name;
+  }
+
+  /** "5 years experience" / "5 वर्ष का अनुभव" */
+  function experienceLabel(years) {
+    if (!years) return t('expNew');
+    return years === 1 ? t('expOne') : years + t('expMany');
   }
 
   /** Get initials from a name, e.g. "Ramesh Singh" → "RS" */
@@ -193,6 +249,23 @@
     $('heroText').textContent  = t('heroText');
     langToggle.textContent  = currentLang === 'en' ? 'हिं' : 'EN';
 
+    // Booking overlay text
+    $('bookTitle').textContent  = t('bookTitle');
+    $('lblName').textContent    = t('lblName');
+    $('lblPhone').textContent   = t('lblPhone');
+    $('lblAddress').textContent = t('lblAddress');
+    $('lblJob').textContent     = t('lblJob');
+    $('bookCancel').textContent = t('cancel');
+    bookSubmit.textContent      = t('submit');
+    $('doneTitle').textContent  = t('doneTitle');
+    $('doneText').textContent   = t('doneText');
+    $('doneWhatsApp').textContent = '💬 ' + t('doneWa');
+    $('doneClose').textContent  = t('close');
+    if (bookingWorker) {
+      bookWorkerEl.textContent = t('bookWith') + bookingWorker.name;
+      fillJobOptions(bookingWorker, custJob.value);
+    }
+
     // Re-render job buttons with translated labels
     renderJobButtons();
     // Re-render worker cards (button labels change)
@@ -232,7 +305,7 @@
   /** Render worker cards based on current filters */
   function renderWorkers() {
     var filtered = workers.filter(function (w) {
-      var matchJob = currentJob === 'all' || w.job === currentJob;
+      var matchJob = currentJob === 'all' || w.jobs.indexOf(currentJob) !== -1;
       var matchSearch = !searchQuery ||
         w.name.toLowerCase().indexOf(searchQuery.toLowerCase()) !== -1;
       return matchJob && matchSearch;
@@ -277,116 +350,167 @@
     avatar.style.background = avatarColor(worker.name);
     avatar.textContent = getInitials(worker.name);
 
-    // Text column
+    // Text column: name + experience
     var textDiv = document.createElement('div');
 
     var nameEl = document.createElement('h3');
     nameEl.className = 'worker-name';
     nameEl.textContent = worker.name;           // textContent = safe
 
-    var jobEl = document.createElement('span');
-    jobEl.className = 'worker-job';
-    jobEl.textContent = jobLabel(worker.job);    // textContent = safe
+    var expEl = document.createElement('p');
+    expEl.className = 'worker-exp';
+    expEl.textContent = '🛠️ ' + experienceLabel(worker.experience);
 
     textDiv.appendChild(nameEl);
-    textDiv.appendChild(jobEl);
+    textDiv.appendChild(expEl);
     infoDiv.appendChild(avatar);
     infoDiv.appendChild(textDiv);
     card.appendChild(infoDiv);
 
-    // — Show Number button —
-    var showBtn = document.createElement('button');
-    showBtn.className = 'show-number-btn';
-    showBtn.textContent = '📞 ' + t('showNumber');
-    showBtn.addEventListener('click', function () {
-      revealNumber(worker, card, showBtn);
+    // — Skill chips —
+    var skillsDiv = document.createElement('div');
+    skillsDiv.className = 'worker-skills';
+    worker.jobs.forEach(function (job) {
+      var chip = document.createElement('span');
+      chip.className = 'worker-job';
+      chip.textContent = jobLabel(job);          // textContent = safe
+      skillsDiv.appendChild(chip);
     });
-    card.appendChild(showBtn);
+    card.appendChild(skillsDiv);
 
-    // — Phone actions container (hidden until number is revealed) —
-    var actionsDiv = document.createElement('div');
-    actionsDiv.className = 'phone-actions hidden';
-    card.appendChild(actionsDiv);
+    // — Book Now button —
+    var bookBtn = document.createElement('button');
+    bookBtn.className = 'book-btn';
+    bookBtn.textContent = '📅 ' + t('bookNow');
+    bookBtn.addEventListener('click', function () { openBooking(worker); });
+    card.appendChild(bookBtn);
 
     return card;
   }
 
   // ═══════════════════════════════════════
-  // 9. REVEAL PHONE NUMBER
+  // 9. BOOKING FORM
   // ═══════════════════════════════════════
 
-  function revealNumber(worker, card, btn) {
-    // Show a loading spinner inside the button
-    btn.disabled = true;
-    btn.textContent = '';
-    var spinner = document.createElement('div');
-    spinner.className = 'btn-spinner';
-    btn.appendChild(spinner);
+  /**
+   * Fill the job dropdown. The worker's own skills come first; the
+   * pre-selected job is the one being filtered, else the worker's first skill.
+   */
+  function fillJobOptions(worker, selected) {
+    var names = worker.jobs.slice();
+    jobs.forEach(function (j) { if (names.indexOf(j) === -1) names.push(j); });
 
-    fetch('/api/number?id=' + encodeURIComponent(worker.id))
+    if (!selected || names.indexOf(selected) === -1) {
+      selected = (currentJob !== 'all' && worker.jobs.indexOf(currentJob) !== -1)
+        ? currentJob
+        : worker.jobs[0];
+    }
+
+    custJob.innerHTML = '';
+    names.forEach(function (name) {
+      var opt = document.createElement('option');
+      opt.value = name;                          // English name is what gets saved
+      opt.textContent = jobLabel(name);
+      opt.selected = name === selected;
+      custJob.appendChild(opt);
+    });
+  }
+
+  function openBooking(worker) {
+    bookingWorker = worker;
+    bookWorkerEl.textContent = t('bookWith') + worker.name;
+    fillJobOptions(worker, null);
+
+    formError.classList.add('hidden');
+    bookForm.classList.remove('hidden');
+    bookDone.classList.add('hidden');
+    bookSubmit.disabled = false;
+    bookSubmit.textContent = t('submit');
+
+    // Keep name/phone/address from last time on this phone (saves typing)
+    try {
+      custName.value    = localStorage.getItem('yws_name') || '';
+      custPhone.value   = localStorage.getItem('yws_phone') || '';
+      custAddress.value = localStorage.getItem('yws_address') || '';
+    } catch (e) { /* ignore */ }
+
+    bookModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    custName.focus();
+  }
+
+  function closeBooking() {
+    bookModal.classList.add('hidden');
+    document.body.style.overflow = '';
+    bookingWorker = null;
+  }
+
+  /** Keep only digits; turn +91 / 91 / 0 prefixes into a plain 10-digit number */
+  function normalizePhone(value) {
+    var d = value.replace(/\D/g, '');
+    if (d.length === 12 && d.indexOf('91') === 0) d = d.substring(2);
+    if (d.length === 11 && d.charAt(0) === '0')  d = d.substring(1);
+    return d;
+  }
+
+  function showFormError(message) {
+    formError.textContent = message;
+    formError.classList.remove('hidden');
+  }
+
+  function submitBooking(e) {
+    e.preventDefault();
+
+    var name    = custName.value.trim();
+    var phone   = normalizePhone(custPhone.value);
+    var address = custAddress.value.trim();
+    var job     = custJob.value;
+
+    if (!name)                    { showFormError(t('errName'));    custName.focus();    return; }
+    if (!/^\d{10}$/.test(phone))  { showFormError(t('errPhone'));   custPhone.focus();   return; }
+    if (!address)                 { showFormError(t('errAddress')); custAddress.focus(); return; }
+    if (!job)                     { showFormError(t('errJob'));     custJob.focus();     return; }
+
+    custPhone.value = phone;   // show the cleaned 10-digit number
+    formError.classList.add('hidden');
+    bookSubmit.disabled = true;
+    bookSubmit.textContent = t('sending');
+
+    fetch('/api/booking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerName:  name,
+        customerPhone: phone,
+        address:       address,
+        jobCategory:   job,
+        workerName:    bookingWorker.name,
+      }),
+    })
       .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
       .then(function (result) {
         if (!result.ok) {
-          // Show error (use Hindi message if available and language is Hindi)
-          var msg = (currentLang === 'hi' && result.data.error_hi)
-            ? result.data.error_hi
-            : (result.data.error || t('error'));
-          showToast(msg, 'error');
-          btn.disabled = false;
-          btn.textContent = '📞 ' + t('showNumber');
+          showFormError((currentLang === 'hi' && result.data.error_hi) || result.data.error || t('error'));
+          bookSubmit.disabled = false;
+          bookSubmit.textContent = t('submit');
           return;
         }
 
-        var data = result.data;
+        try {
+          localStorage.setItem('yws_name', name);
+          localStorage.setItem('yws_phone', phone);
+          localStorage.setItem('yws_address', address);
+        } catch (err) { /* ignore */ }
 
-        // Hide button, show phone actions
-        btn.classList.add('hidden');
-        var actions = card.querySelector('.phone-actions');
-        actions.classList.remove('hidden');
-
-        // Phone number display
-        var phoneDiv = document.createElement('div');
-        phoneDiv.className = 'phone-display';
-        phoneDiv.textContent = '+91 ' + data.phone;   // textContent = safe
-        actions.appendChild(phoneDiv);
-
-        // Buttons row
-        var btnRow = document.createElement('div');
-        btnRow.className = 'action-buttons';
-
-        // Call button
-        var callLink = document.createElement('a');
-        callLink.href = 'tel:+91' + data.phone;
-        callLink.className = 'action-btn call-btn';
-        callLink.textContent = '📞 ' + t('call');
-        btnRow.appendChild(callLink);
-
-        // WhatsApp button (only if the worker has WhatsApp)
-        if (data.whatsapp) {
-          var waText;
-          if (currentLang === 'hi') {
-            waText = 'नमस्ते, मुझे आपका नंबर न्यू योगेश्वर इलेक्ट्रिक & नल फिटिंग से मिला। मुझे '
-              + worker.job + ' की ज़रूरत है। क्या आप उपलब्ध हैं?';
-          } else {
-            waText = 'Namaste, I found your contact through New Yogeshwar Electric & Nal Fitting. I need a '
-              + worker.job + '. Are you available?';
-          }
-
-          var waLink = document.createElement('a');
-          waLink.href = 'https://wa.me/91' + data.phone + '?text=' + encodeURIComponent(waText);
-          waLink.target = '_blank';
-          waLink.rel = 'noopener noreferrer';
-          waLink.className = 'action-btn wa-btn';
-          waLink.textContent = '💬 ' + t('whatsapp');
-          btnRow.appendChild(waLink);
-        }
-
-        actions.appendChild(btnRow);
+        // Show the confirmation with the WhatsApp button
+        $('doneWhatsApp').href = result.data.whatsappUrl;
+        bookForm.classList.add('hidden');
+        bookDone.classList.remove('hidden');
       })
       .catch(function () {
-        showToast(t('error'), 'error');
-        btn.disabled = false;
-        btn.textContent = '📞 ' + t('showNumber');
+        showFormError(t('error'));
+        bookSubmit.disabled = false;
+        bookSubmit.textContent = t('submit');
       });
   }
 
@@ -396,7 +520,7 @@
 
   /**
    * Load worker list — uses localStorage cache for instant display,
-   * then refreshes in the background. NEVER caches phone numbers.
+   * then refreshes in the background. 
    */
   function loadWorkers() {
     // 1. Try to show cached data immediately
@@ -421,7 +545,7 @@
       })
       .then(function (data) {
         workers = data;
-        // Cache in localStorage (these have NO phone numbers)
+        // Cache in localStorage 
         try {
           localStorage.setItem(CACHE_KEY, JSON.stringify(data));
         } catch (e) { /* storage full — ignore */ }
@@ -473,6 +597,21 @@
       searchQuery = searchInput.value.trim();
       renderWorkers();
     }, 200);
+  });
+
+  // Booking overlay
+  bookForm.addEventListener('submit', submitBooking);
+  $('bookCancel').addEventListener('click', closeBooking);
+  $('doneClose').addEventListener('click', closeBooking);
+  bookModal.addEventListener('click', function (e) {
+    if (e.target === bookModal) closeBooking();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !bookModal.classList.contains('hidden')) closeBooking();
+  });
+  // Phone box accepts digits only
+  custPhone.addEventListener('input', function () {
+    custPhone.value = custPhone.value.replace(/\D/g, '').substring(0, 10);
   });
 
   // "All" job filter button

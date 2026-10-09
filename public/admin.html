@@ -62,21 +62,13 @@
               <input type="text" id="workerName" placeholder="Full name" maxlength="100" />
             </div>
             <div class="form-group">
-              <label for="workerPhone">Phone (10 digits)</label>
-              <input type="tel" id="workerPhone" placeholder="9876543210" maxlength="10" pattern="\d{10}" />
-            </div>
-            <div class="form-group">
-              <label for="workerJob">Job Category</label>
-              <select id="workerJob">
-                <option value="">Select job...</option>
-              </select>
+              <label for="workerExp">Experience (years)</label>
+              <input type="number" id="workerExp" placeholder="5" min="0" max="60" inputmode="numeric" />
             </div>
           </div>
-          <div class="form-row">
-            <div class="checkbox-group">
-              <input type="checkbox" id="workerWhatsApp" />
-              <label for="workerWhatsApp">Has WhatsApp</label>
-            </div>
+          <div class="form-group">
+            <label>Job Categories (tick all that apply)</label>
+            <div class="job-checks" id="workerJobs"></div>
           </div>
           <button class="btn btn-primary" id="addWorkerBtn">➕ Add Worker</button>
         </div>
@@ -87,10 +79,9 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Phone</th>
-                <th>Job</th>
+                <th>Experience</th>
+                <th>Jobs</th>
                 <th>Status</th>
-                <th>WhatsApp</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -136,20 +127,16 @@
         <input type="text" id="editName" maxlength="100" />
       </div>
       <div class="form-group">
-        <label for="editPhone">Phone (10 digits)</label>
-        <input type="tel" id="editPhone" maxlength="10" pattern="\d{10}" />
+        <label for="editExp">Experience (years)</label>
+        <input type="number" id="editExp" min="0" max="60" inputmode="numeric" />
       </div>
       <div class="form-group">
-        <label for="editJob">Job Category</label>
-        <select id="editJob"></select>
+        <label>Job Categories</label>
+        <div class="job-checks" id="editJobs"></div>
       </div>
       <div class="checkbox-group" style="padding-top:0">
         <input type="checkbox" id="editActive" />
         <label for="editActive">Active (visible to customers)</label>
-      </div>
-      <div class="checkbox-group" style="padding-top:0;margin-top:8px">
-        <input type="checkbox" id="editWhatsApp" />
-        <label for="editWhatsApp">Has WhatsApp</label>
       </div>
       <input type="hidden" id="editId" />
       <div class="modal-actions">

@@ -43,9 +43,8 @@
 
   // Add worker form
   var workerName     = $('workerName');
-  var workerPhone    = $('workerPhone');
-  var workerJob      = $('workerJob');
-  var workerWhatsApp = $('workerWhatsApp');
+  var workerExp      = $('workerExp');
+  var workerJobs     = $('workerJobs');   // container of job tick-boxes
   var addWorkerBtn   = $('addWorkerBtn');
 
   // Workers table / mobile list
@@ -61,10 +60,9 @@
   var editModal      = $('editModal');
   var editId         = $('editId');
   var editName       = $('editName');
-  var editPhone      = $('editPhone');
-  var editJob        = $('editJob');
+  var editExp        = $('editExp');
+  var editJobs       = $('editJobs');     // container of job tick-boxes
   var editActive     = $('editActive');
-  var editWhatsApp   = $('editWhatsApp');
   var editSaveBtn    = $('editSaveBtn');
   var editCancelBtn  = $('editCancelBtn');
 
@@ -90,6 +88,36 @@
     toastTimer = setTimeout(function () {
       toastEl.classList.remove('show');
     }, 4000);
+  }
+
+  /** Draw one tick-box per job inside `container`; tick the ones in `selected` */
+  function renderJobChecks(container, selected) {
+    container.innerHTML = '';
+    allJobs.forEach(function (job) {
+      var label = document.createElement('label');
+      label.className = 'job-check';
+      var box = document.createElement('input');
+      box.type = 'checkbox';
+      box.value = job;
+      box.checked = selected.indexOf(job) !== -1;
+      var text = document.createElement('span');
+      text.textContent = job;
+      label.appendChild(box);
+      label.appendChild(text);
+      container.appendChild(label);
+    });
+  }
+
+  /** Names of the ticked jobs inside `container` */
+  function getCheckedJobs(container) {
+    var boxes = container.querySelectorAll('input:checked');
+    return Array.prototype.map.call(boxes, function (b) { return b.value; });
+  }
+
+  /** Experience must be a whole number 0-60 */
+  function validExperience(text) {
+    var n = Number(text);
+    return text !== '' && Number.isInteger(n) && n >= 0 && n <= 60;
   }
 
   /** Make a POST to /api/admin with the password and action */
@@ -235,7 +263,7 @@
     if (allWorkers.length === 0) {
       var emptyRow = document.createElement('tr');
       var emptyCell = document.createElement('td');
-      emptyCell.setAttribute('colspan', '6');
+      emptyCell.setAttribute('colspan', '5');
       emptyCell.style.textAlign = 'center';
       emptyCell.style.padding = '24px';
       emptyCell.style.color = '#94a3b8';
@@ -253,20 +281,17 @@
       tdName.textContent = w.name;
       tdName.style.fontWeight = '600';
 
-      var tdPhone = document.createElement('td');
-      tdPhone.textContent = w.phone;
+      var tdExp = document.createElement('td');
+      tdExp.textContent = w.experience + ' yrs';
 
       var tdJob = document.createElement('td');
-      tdJob.textContent = w.job;
+      tdJob.textContent = w.jobs.join(', ');
 
       var tdStatus = document.createElement('td');
       var badge = document.createElement('span');
       badge.className = 'status-badge ' + (w.active ? 'active' : 'inactive');
       badge.textContent = w.active ? 'Active' : 'Hidden';
       tdStatus.appendChild(badge);
-
-      var tdWA = document.createElement('td');
-      tdWA.textContent = w.whatsapp ? '✅' : '—';
 
       var tdActions = document.createElement('td');
       var actionsDiv = document.createElement('div');
@@ -287,10 +312,9 @@
       tdActions.appendChild(actionsDiv);
 
       tr.appendChild(tdName);
-      tr.appendChild(tdPhone);
+      tr.appendChild(tdExp);
       tr.appendChild(tdJob);
       tr.appendChild(tdStatus);
-      tr.appendChild(tdWA);
       tr.appendChild(tdActions);
       tableBody.appendChild(tr);
 
@@ -300,10 +324,9 @@
 
       var fields = [
         ['Name', w.name],
-        ['Phone', w.phone],
-        ['Job', w.job],
+        ['Experience', w.experience + ' yrs'],
+        ['Jobs', w.jobs.join(', ')],
         ['Status', w.active ? 'Active' : 'Hidden'],
-        ['WhatsApp', w.whatsapp ? 'Yes' : 'No'],
       ];
 
       fields.forEach(function (f) {
@@ -375,25 +398,9 @@
     });
   }
 
-  /** Populate the job dropdowns in add/edit forms */
+  /** Refresh the job tick-boxes in the add form */
   function populateJobDropdowns() {
-    // Add form dropdown
-    workerJob.innerHTML = '<option value="">Select job...</option>';
-    allJobs.forEach(function (job) {
-      var opt = document.createElement('option');
-      opt.value = job;
-      opt.textContent = job;
-      workerJob.appendChild(opt);
-    });
-
-    // Edit form dropdown
-    editJob.innerHTML = '';
-    allJobs.forEach(function (job) {
-      var opt = document.createElement('option');
-      opt.value = job;
-      opt.textContent = job;
-      editJob.appendChild(opt);
-    });
+    renderJobChecks(workerJobs, getCheckedJobs(workerJobs));
   }
 
   // ═══════════════════════════════════════
@@ -401,27 +408,25 @@
   // ═══════════════════════════════════════
 
   addWorkerBtn.addEventListener('click', function () {
-    var name  = workerName.value.trim();
-    var phone = workerPhone.value.trim();
-    var job   = workerJob.value;
-    var wa    = workerWhatsApp.checked;
+    var name = workerName.value.trim();
+    var exp  = workerExp.value.trim();
+    var jobs = getCheckedJobs(workerJobs);
 
     // Validate
     if (!name) { showToast('Please enter worker name.', 'error'); workerName.focus(); return; }
-    if (!/^\d{10}$/.test(phone)) { showToast('Phone must be exactly 10 digits.', 'error'); workerPhone.focus(); return; }
-    if (!job) { showToast('Please select a job category.', 'error'); workerJob.focus(); return; }
+    if (!validExperience(exp)) { showToast('Experience must be a whole number from 0 to 60.', 'error'); workerExp.focus(); return; }
+    if (jobs.length === 0) { showToast('Tick at least one job category.', 'error'); return; }
 
     addWorkerBtn.disabled = true;
     addWorkerBtn.textContent = 'Adding...';
 
-    adminAPI({ action: 'addWorker', name: name, phone: phone, job: job, whatsapp: wa })
+    adminAPI({ action: 'addWorker', name: name, experience: Number(exp), jobs: jobs })
       .then(function (res) {
         if (res.ok) {
           showToast('Worker added!', 'success');
           workerName.value = '';
-          workerPhone.value = '';
-          workerJob.value = '';
-          workerWhatsApp.checked = false;
+          workerExp.value = '';
+          renderJobChecks(workerJobs, []);
           loadWorkers();
         } else {
           showToast(res.data.error || 'Failed to add worker.', 'error');
@@ -443,19 +448,9 @@
   function openEditModal(worker) {
     editId.value       = worker.id;
     editName.value     = worker.name;
-    editPhone.value    = worker.phone;
+    editExp.value      = worker.experience;
     editActive.checked = worker.active;
-    editWhatsApp.checked = worker.whatsapp;
-
-    // Populate dropdown and select current job
-    editJob.innerHTML = '';
-    allJobs.forEach(function (job) {
-      var opt = document.createElement('option');
-      opt.value = job;
-      opt.textContent = job;
-      if (job === worker.job) opt.selected = true;
-      editJob.appendChild(opt);
-    });
+    renderJobChecks(editJobs, worker.jobs);
 
     editModal.classList.remove('hidden');
   }
@@ -472,19 +467,18 @@
   editSaveBtn.addEventListener('click', function () {
     var id    = editId.value;
     var name  = editName.value.trim();
-    var phone = editPhone.value.trim();
-    var job   = editJob.value;
+    var exp   = editExp.value.trim();
+    var jobs  = getCheckedJobs(editJobs);
     var active = editActive.checked;
-    var wa    = editWhatsApp.checked;
 
     if (!name) { showToast('Name is required.', 'error'); return; }
-    if (!/^\d{10}$/.test(phone)) { showToast('Phone must be 10 digits.', 'error'); return; }
-    if (!job) { showToast('Job is required.', 'error'); return; }
+    if (!validExperience(exp)) { showToast('Experience must be a whole number from 0 to 60.', 'error'); return; }
+    if (jobs.length === 0) { showToast('Tick at least one job category.', 'error'); return; }
 
     editSaveBtn.disabled = true;
     editSaveBtn.textContent = 'Saving...';
 
-    adminAPI({ action: 'updateWorker', id: id, name: name, phone: phone, job: job, active: active, whatsapp: wa })
+    adminAPI({ action: 'updateWorker', id: id, name: name, experience: Number(exp), jobs: jobs, active: active })
       .then(function (res) {
         if (res.ok) {
           showToast('Worker updated!', 'success');

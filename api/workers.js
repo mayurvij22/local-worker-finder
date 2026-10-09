@@ -1,8 +1,8 @@
 /**
  * GET /api/workers
  *
- * Returns active workers WITHOUT phone numbers.
- * Response: [{ id, name, job, whatsapp }, ...]
+ * Returns active workers.
+ * Response: [{ id, name, experience, jobs: ["Electrician", ...] }, ...]
  * Cached at Vercel edge for 60 seconds.
  */
 
