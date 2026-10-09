@@ -3,98 +3,160 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#1e1b4b" />
+  <meta name="theme-color" content="#ffffff" />
   <title>New Yogeshwar Electric &amp; Nal Fitting — Find Workers</title>
   <meta name="description" content="Find trusted local electricians, plumbers, AC technicians, painters, and carpenters. Scan the QR code at New Yogeshwar Electric & Nal Fitting, Amalner." />
-  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="/css/app.css" />
 </head>
-<body>
+<body class="min-h-screen bg-white pb-24 sm:pb-0">
 
-  <!-- ─── Developer strip ─── -->
-  <div class="dev-bar" id="devBar">Site developed by <strong>Mayuur</strong>, Bangalore</div>
+  <!-- Developer credit -->
+  <div class="bg-neutral-950 px-4 py-1.5 pt-[calc(0.375rem+env(safe-area-inset-top))] text-center text-[11px] tracking-wide text-neutral-400" data-i18n="devBy">
+    Site developed by Mayuur, Bangalore
+  </div>
 
-  <!-- ─── Header ─── -->
-  <header class="header">
-    <div class="header-content">
-      <div class="shop-info">
-        <div class="shop-icon" aria-hidden="true">⚡</div>
-        <div>
-          <h1 class="shop-name" id="shopName">New Yogeshwar Electric &amp; Nal Fitting</h1>
-          <p class="shop-tagline" id="tagline">Find trusted local workers</p>
-        </div>
+  <!-- ─── Top bar ─── -->
+  <header class="sticky top-0 z-40 border-b border-neutral-200/80 bg-white/90 backdrop-blur-md">
+    <div class="container-page flex min-h-[4rem] items-center justify-between gap-3 py-2">
+      <a href="/" class="flex min-w-0 items-center gap-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-lg" aria-hidden="true">⚡</span>
+        <span class="min-w-0">
+          <span class="block text-[13px] font-bold leading-tight xs:text-sm sm:text-base" data-i18n="shopName">New Yogeshwar Electric &amp; Nal Fitting</span>
+          <span class="mt-0.5 flex items-center gap-1 text-xs text-neutral-500">
+            <svg class="h-3.5 w-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="truncate" data-i18n="location">Sane Nagar, Amalner</span>
+          </span>
+        </span>
+      </a>
+      <div class="flex shrink-0 items-center gap-2">
+        <a href="tel:+918208104775" class="btn btn-outline btn-sm hidden md:inline-flex">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+          082081 04775
+        </a>
+        <button id="langToggle" type="button" class="inline-flex h-9 min-w-[2.75rem] items-center justify-center rounded-full border border-neutral-300 px-3 text-sm font-semibold transition hover:border-neutral-900">हिं</button>
       </div>
-      <button class="lang-toggle" id="langToggle" aria-label="Switch language">हिं</button>
     </div>
   </header>
 
-  <!-- ─── Main Content ─── -->
-  <section class="hero">
-    <div class="hero-inner">
-      <h2 id="heroTitle">Need a skilled worker?</h2>
-      <p id="heroText">Electricians, plumbers, painters &amp; more — call or WhatsApp directly.</p>
-      <div class="hero-contact">
-        <a class="hero-chip" href="https://www.google.com/maps/search/?api=1&query=Sane+Nagar+Amalner+Maharashtra+425401" target="_blank" rel="noopener noreferrer">
-          <span aria-hidden="true">📍</span> <span id="shopAddress">Sane Nagar, Amalner, Maharashtra 425401</span>
-        </a>
-        <a class="hero-chip" href="tel:+918208104775">
-          <span aria-hidden="true">📞</span> <span>082081 04775</span>
-        </a>
+  <main class="container-page">
+
+    <!-- ─── Hero: title, search, categories + promo ─── -->
+    <section class="grid gap-5 pt-6 sm:gap-6 sm:pt-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:gap-x-10 lg:pt-14">
+
+      <!-- Title + search -->
+      <div class="min-w-0 lg:col-start-1 lg:row-start-1">
+        <h1 class="max-w-xl text-[26px] font-extrabold leading-[1.15] tracking-tight xs:text-3xl sm:text-4xl lg:text-5xl" data-i18n="heroTitle">Trusted local workers, one tap away</h1>
+        <p class="mt-3 max-w-lg text-sm text-neutral-500 sm:text-base" data-i18n="heroText">Electricians, plumbers, painters &amp; more — call or WhatsApp them directly.</p>
+
+        <label class="relative mt-5 block sm:mt-6">
+          <span class="sr-only">Search</span>
+          <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="searchInput" type="search" autocomplete="off" enterkeyhint="search"
+            class="h-12 w-full rounded-xl border border-neutral-200 bg-neutral-50 pl-12 pr-4 text-base outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white focus:ring-4 focus:ring-neutral-900/5 sm:h-14"
+            placeholder="Search workers by name" />
+        </label>
       </div>
-    </div>
-  </section>
 
-  <main class="container overlap">
+      <!-- Categories -->
+      <div class="card p-4 sm:p-6 lg:col-span-2 lg:row-start-3">
+          <h2 class="mb-4 text-sm font-semibold text-neutral-500 sm:text-base" data-i18n="lookingFor">What are you looking for?</h2>
+          <div id="categoryGrid" class="grid grid-cols-3 gap-x-2 gap-y-4 xs:grid-cols-4 sm:gap-x-3 md:grid-cols-8">
+            <!-- Placeholders until jobs load -->
+            <div class="flex animate-pulse flex-col items-center gap-2"><span class="aspect-square w-full max-w-[76px] rounded-2xl bg-neutral-100"></span><span class="h-2.5 w-12 rounded bg-neutral-100"></span></div>
+            <div class="flex animate-pulse flex-col items-center gap-2"><span class="aspect-square w-full max-w-[76px] rounded-2xl bg-neutral-100"></span><span class="h-2.5 w-12 rounded bg-neutral-100"></span></div>
+            <div class="flex animate-pulse flex-col items-center gap-2"><span class="aspect-square w-full max-w-[76px] rounded-2xl bg-neutral-100"></span><span class="h-2.5 w-12 rounded bg-neutral-100"></span></div>
+            <div class="flex animate-pulse flex-col items-center gap-2"><span class="aspect-square w-full max-w-[76px] rounded-2xl bg-neutral-100"></span><span class="h-2.5 w-12 rounded bg-neutral-100"></span></div>
+          </div>
+      </div>
 
-    <div class="toolbar">
-    <!-- Search -->
-    <div class="search-bar">
-      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.35-4.35" />
-      </svg>
-      <input type="text" id="searchInput" class="search-input" placeholder="Search by name..." autocomplete="off" />
-    </div>
+      <!-- Promo -->
+      <aside class="relative flex min-w-0 flex-col justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-brand-500 via-brand-700 to-brand-900 p-6 text-white sm:p-8 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <div class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" aria-hidden="true"></div>
+          <div class="pointer-events-none absolute -bottom-16 right-10 h-40 w-40 rounded-full bg-white/5" aria-hidden="true"></div>
+          <p class="text-4xl sm:text-5xl" aria-hidden="true">🔌🚰</p>
+          <h2 class="mt-4 text-xl font-bold leading-snug sm:text-2xl" data-i18n="promoTitle">Not sure who to call?</h2>
+          <p class="mt-2 max-w-sm text-sm text-white/80 sm:text-base" data-i18n="promoText">Call the shop and we will connect you with a worker we trust.</p>
+          <div class="mt-5 flex flex-wrap gap-2">
+            <a href="tel:+918208104775" class="btn bg-white text-neutral-900 hover:bg-neutral-100">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+              <span data-i18n="callShop">Call shop</span>
+            </a>
+            <a href="https://www.google.com/maps/search/?api=1&query=Sane+Nagar+Amalner+Maharashtra+425401" target="_blank" rel="noopener noreferrer" class="btn border border-white/30 bg-white/10 text-white hover:bg-white/20">
+              <span data-i18n="directions">Directions</span>
+            </a>
+          </div>
+      </aside>
 
-    <!-- Job Filters -->
-    <div class="job-filters" id="jobFilters">
-      <button class="job-btn active" data-job="all" id="btnAll">All</button>
-      <!-- More buttons added by JS -->
-    </div>
+      <!-- Trust points -->
+      <ul class="grid grid-cols-3 gap-2 sm:gap-3 lg:col-start-1 lg:row-start-2">
+          <li class="card flex flex-col items-center gap-2 px-2 py-4 text-center">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-lg" aria-hidden="true">✅</span>
+            <span class="text-[11px] font-medium leading-tight text-neutral-700 xs:text-xs sm:text-sm" data-i18n="trust1">Recommended by the shop</span>
+          </li>
+          <li class="card flex flex-col items-center gap-2 px-2 py-4 text-center">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-sky-50 text-lg" aria-hidden="true">📞</span>
+            <span class="text-[11px] font-medium leading-tight text-neutral-700 xs:text-xs sm:text-sm" data-i18n="trust2">Call or WhatsApp directly</span>
+          </li>
+          <li class="card flex flex-col items-center gap-2 px-2 py-4 text-center">
+            <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-lg" aria-hidden="true">📍</span>
+            <span class="text-[11px] font-medium leading-tight text-neutral-700 xs:text-xs sm:text-sm" data-i18n="trust3">Local to Amalner</span>
+          </li>
+      </ul>
+    </section>
 
-    </div>
+    <!-- ─── Workers ─── -->
+    <section id="workersSection" class="scroll-mt-20 pt-10 sm:pt-14" aria-labelledby="workersTitle">
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 sm:mb-6">
+        <div>
+          <h2 id="workersTitle" class="text-xl font-bold tracking-tight sm:text-2xl">All workers</h2>
+          <p id="resultCount" class="mt-0.5 text-sm text-neutral-500" aria-live="polite"></p>
+        </div>
+        <button id="clearFilter" type="button" class="btn btn-outline btn-sm" hidden>
+          <span aria-hidden="true">✕</span> <span data-i18n="clearFilter">Show all</span>
+        </button>
+      </div>
 
-    <p class="result-count hidden" id="resultCount"></p>
+      <div id="workersGrid" class="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3"></div>
 
-    <!-- Workers Grid (cards rendered by JS) -->
-    <div class="workers-grid" id="workersGrid"></div>
+      <div id="emptyState" class="card flex flex-col items-center px-6 py-14 text-center" hidden>
+        <span class="text-5xl" aria-hidden="true">🔍</span>
+        <p class="mt-4 font-semibold" data-i18n="noWorkers">No workers found</p>
+        <p class="mt-1 text-sm text-neutral-500" data-i18n="noWorkersHint">Try another category or a different name.</p>
+      </div>
+    </section>
 
-    <!-- Empty State -->
-    <div class="empty-state hidden" id="emptyState">
-      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.35-4.35" />
-        <path d="M8 11h6" />
-      </svg>
-      <p id="emptyText">No workers found</p>
-    </div>
-
-    <footer class="site-footer">
-      <p class="footer-shop" id="footerShop">New Yogeshwar Electric &amp; Nal Fitting</p>
-      <p id="footerAddr">Sane Nagar, Amalner, Maharashtra 425401</p>
-      <p><a href="tel:+918208104775">📞 082081 04775</a></p>
-      <p class="footer-dev" id="footerDev">Site developed by Mayuur, Bangalore</p>
+    <!-- ─── Footer ─── -->
+    <footer class="mt-14 border-t border-neutral-200 py-10 sm:mt-20">
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <div class="flex items-center gap-3">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-900 text-lg" aria-hidden="true">⚡</span>
+            <p class="font-bold" data-i18n="shopName">New Yogeshwar Electric &amp; Nal Fitting</p>
+          </div>
+          <p class="mt-3 max-w-xs text-sm text-neutral-500" data-i18n="footerAbout">Your local shop for electrical and plumbing work in Amalner.</p>
+        </div>
+        <div class="space-y-2 text-sm">
+          <a class="block font-semibold text-neutral-900 hover:text-brand-600" href="tel:+918208104775">📞 082081 04775</a>
+          <a class="block text-neutral-500 hover:text-neutral-900" href="https://www.google.com/maps/search/?api=1&query=Sane+Nagar+Amalner+Maharashtra+425401" target="_blank" rel="noopener noreferrer">📍 <span data-i18n="address">Sane Nagar, Amalner, Maharashtra 425401</span></a>
+        </div>
+        <p class="text-sm text-neutral-400 lg:text-right" data-i18n="devBy">Site developed by Mayuur, Bangalore</p>
+      </div>
     </footer>
-
   </main>
 
-  <!-- Floating call-shop button -->
-  <a class="fab-call" href="tel:+918208104775" aria-label="Call shop">
-    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
-  </a>
+  <!-- Phones: sticky call-the-shop bar -->
+  <div class="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
+    <a href="tel:+918208104775" class="btn btn-dark w-full">
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>
+      <span data-i18n="callShop">Call shop</span> · 082081 04775
+    </a>
+  </div>
 
-  <!-- Toast -->
-  <div class="toast" id="toast" role="alert"></div>
+  <div id="toast" class="toast bottom-24 sm:bottom-8" role="status" aria-live="polite"></div>
 
-  <script src="/js/app.js"></script>
+  <script type="module" src="/js/customer/main.js"></script>
 </body>
 </html>

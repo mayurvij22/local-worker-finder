@@ -12,10 +12,11 @@ yogeshwar/
 ├── public/               ← Static files (customer + admin pages)
 │   ├── index.html        ← Customer page (QR code lands here)
 │   ├── admin.html        ← Admin dashboard
-│   ├── css/style.css     ← All styles
-│   └── js/
-│       ├── app.js        ← Customer page logic
-│       └── admin.js      ← Admin page logic
+│   ├── css/app.css       ← Built Tailwind CSS (generated — do not edit)
+│   └── js/               ← ES modules, no bundler
+│       ├── shared/dom.js ← DOM helpers, icons, toast, modals
+│       ├── customer/     ← main.js (customer page) + i18n.js (EN/HI text)
+│       └── admin/main.js ← Admin page logic
 ├── api/                  ← Vercel serverless functions
 │   ├── workers.js        ← GET  /api/workers (public, no phones)
 │   ├── number.js         ← GET  /api/number?id=X (rate-limited)
@@ -24,9 +25,22 @@ yogeshwar/
 ├── lib/
 │   ├── sheets.js         ← Google Sheets API helper
 │   └── ratelimit.js      ← In-memory rate limiter
+├── src/styles/tailwind.css ← Tailwind source (components: .btn, .field, .card, .modal…)
+├── tailwind.config.js    ← Brand colours, fonts, breakpoints
 ├── package.json
 ├── vercel.json
 └── README.md             ← You are here
+```
+
+### 🎨 Styling (Tailwind CSS)
+
+The pages use Tailwind utility classes. After changing classes in any HTML/JS file, rebuild the CSS
+and commit `public/css/app.css` (Vercel serves it as-is, no build step):
+
+```bash
+npm install
+npm run build:css     # one-off, minified
+npm run watch:css     # rebuild on every save while developing
 ```
 
 ---
