@@ -63,8 +63,9 @@
           <span class="sr-only">Search</span>
           <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input id="searchInput" type="search" autocomplete="off" enterkeyhint="search"
-            class="h-12 w-full rounded-xl border border-neutral-200 bg-neutral-50 pl-12 pr-4 text-base outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white focus:ring-4 focus:ring-neutral-900/5 sm:h-14"
-            placeholder="Search workers by name" />
+            class="h-12 w-full rounded-xl border border-neutral-200 bg-neutral-50 pl-12 pr-12 text-base outline-none transition placeholder:text-neutral-400 focus:border-neutral-900 focus:bg-white focus:ring-4 focus:ring-neutral-900/5 sm:h-14 [&::-webkit-search-cancel-button]:hidden"
+            placeholder="Search name or work — plumber, wiring, AC…" />
+          <button id="searchClear" type="button" class="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-200" aria-label="Clear search" hidden>✕</button>
         </label>
       </div>
 
@@ -162,7 +163,8 @@
       <div id="emptyState" class="card flex flex-col items-center px-6 py-14 text-center" hidden>
         <span class="text-5xl" aria-hidden="true">🔍</span>
         <p class="mt-4 font-semibold" data-i18n="noWorkers">No workers found</p>
-        <p class="mt-1 text-sm text-neutral-500" data-i18n="noWorkersHint">Try another category or a different name.</p>
+        <p class="mt-1 text-sm text-neutral-500" data-i18n="noWorkersHint">Try another category, a different name, or the type of work (e.g. pipe, fan, tiles).</p>
+        <button id="searchAll" type="button" class="btn btn-outline btn-sm mt-4" data-i18n="searchAll" hidden>Search all categories</button>
       </div>
     </section>
 

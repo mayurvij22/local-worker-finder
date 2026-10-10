@@ -9,7 +9,10 @@ export const STRINGS = {
     devBy:        'Site developed by Mayuur, Bangalore',
     heroTitle:    'Trusted local workers, one tap away',
     heroText:     'Electricians, plumbers, painters & more — call or WhatsApp them directly.',
-    search:       'Search workers by name',
+    search:       'Search name or work — plumber, wiring, AC…',
+    resultsFor:   'Results for “{q}”',
+    searchAll:    'Search all categories',
+    clearSearch:  'Clear search',
     lookingFor:   'What are you looking for?',
     allJobs:      'All',
     trust1:       'Recommended by the shop',
@@ -27,7 +30,7 @@ export const STRINGS = {
     call:         'Call',
     whatsapp:     'WhatsApp',
     noWorkers:    'No workers found',
-    noWorkersHint:'Try another category or a different name.',
+    noWorkersHint:'Try another category, a different name, or the type of work (e.g. pipe, fan, tiles).',
     countOne:     '1 worker',
     countMany:    ' workers',
     address:      'Sane Nagar, Amalner, Maharashtra 425401',
@@ -46,7 +49,10 @@ export const STRINGS = {
     devBy:        'साइट डेवलपर: मयूर, बेंगलुरु',
     heroTitle:    'भरोसेमंद स्थानीय कारीगर, बस एक टैप दूर',
     heroText:     'इलेक्ट्रीशियन, प्लंबर, पेंटर और बहुत कुछ — सीधे कॉल या व्हाट्सएप करें।',
-    search:       'नाम से कारीगर खोजें',
+    search:       'नाम या काम खोजें — प्लंबर, वायरिंग, AC…',
+    resultsFor:   '“{q}” के परिणाम',
+    searchAll:    'सभी श्रेणियों में खोजें',
+    clearSearch:  'खोज साफ़ करें',
     lookingFor:   'आपको क्या चाहिए?',
     allJobs:      'सभी',
     trust1:       'दुकान द्वारा अनुशंसित',
@@ -83,7 +89,10 @@ export const STRINGS = {
     devBy:        'साइट डेव्हलपर: मयूर, बेंगळुरू',
     heroTitle:    'विश्वासू स्थानिक कारागीर, फक्त एका टॅपवर',
     heroText:     'इलेक्ट्रिशियन, प्लंबर, पेंटर आणि बरेच काही — थेट कॉल किंवा व्हॉट्सअ‍ॅप करा.',
-    search:       'नावाने कारागीर शोधा',
+    search:       'नाव किंवा काम शोधा — प्लंबर, वायरिंग, AC…',
+    resultsFor:   '“{q}” साठी निकाल',
+    searchAll:    'सर्व श्रेणींमध्ये शोधा',
+    clearSearch:  'शोध साफ करा',
     lookingFor:   'तुम्हाला काय हवे आहे?',
     allJobs:      'सर्व',
     trust1:       'दुकानाने शिफारस केलेले',
@@ -159,4 +168,24 @@ const JOB_ICONS = [
 export function jobIcon(name) {
   const match = JOB_ICONS.find(([re]) => re.test(name));
   return match ? match[1] : '🧰';
+}
+
+// Words customers type for each kind of work (English, Hindi, Marathi, and Hinglish spellings).
+// Matched against the job name like JOB_ICONS, so new jobs from the sheet still work by name.
+const JOB_KEYWORDS = [
+  [/electric|wiring|light/i, 'electrician electric electrical bijli light wiring wire fan switch socket meter mcb inverter short circuit बिजली इलेक्ट्रीशियन इलेक्ट्रिशियन वायरिंग लाइट पंखा स्विच मीटर वीज लाईट'],
+  [/plumb|nal|pipe|tap/i, 'plumber plumbing pipe tap nal leak leakage water tank bathroom toilet geyser drainage प्लंबर नल नळ पाइप पाईप पानी पाणी टंकी टाकी लीकेज गीज़र'],
+  [/\bac\b|air ?con|fridge|refrigerat|cool/i, 'ac a.c air conditioner cooling gas fridge refrigerator cooler washing machine एसी फ्रिज कूलर एअर कंडिशनर'],
+  [/paint/i, 'painter painting paint colour color wall putty polish पेंटर पेंटिंग रंग पुट्टी कलर'],
+  [/carpent|furniture|wood/i, 'carpenter wood furniture door window bed cupboard almirah sutar badhai कारपेंटर बढ़ई सुतार फर्नीचर दरवाजा दरवाजे खिडकी लकड़ी लाकूड'],
+  [/mason|tile|construct|brick/i, 'mason mistri construction tile tiles brick cement plaster flooring gavandi मिस्त्री गवंडी टाइल फरशी सीमेंट प्लास्टर बांधकाम'],
+  [/weld|fabricat/i, 'welder welding gate grill fabrication iron shed वेल्डर वेल्डिंग गेट ग्रिल लोखंड'],
+  [/motor|pump|borewell/i, 'motor pump borewell submersible rewinding मोटर पंप बोरवेल'],
+  [/clean/i, 'cleaning cleaner safai सफाई साफसफाई'],
+];
+
+/** Everything a customer might type to find this job: its name in all languages plus common words. */
+export function jobSearchText(name) {
+  const extra = JOB_KEYWORDS.filter(([re]) => re.test(name)).map(([, words]) => words);
+  return [name, JOB_HI[name], JOB_MR[name], ...extra].filter(Boolean).join(' ');
 }

@@ -1,5 +1,5 @@
 /**
- * Customer page — pick a category, search by name, reveal a worker's
+ * Customer page — pick a category, search by name or type of work, reveal a worker's
  * number, then call or WhatsApp them.
  *
  * The worker list is cached in localStorage for an instant first paint
@@ -10,7 +10,7 @@
  */
 
 import { $, el, icon, spinner, showToast, store } from '../shared/dom.js';
-import { STRINGS, LANGS, jobLabel, jobIcon } from './i18n.js';
+import { STRINGS, LANGS, jobLabel, jobIcon, jobSearchText } from './i18n.js';
 
 const CACHE_KEY = 'yws_workers';
 const LANG_KEY  = 'yws_lang';
@@ -24,10 +24,13 @@ function initialLang() {
   return LANGS.includes(device) ? device : 'en';
 }
 
+// ?job=Plumber&q=leak — so a filtered list can be shared and survives a reload
+const params = new URLSearchParams(location.search);
+
 const state = {
   lang: initialLang(),
-  job: 'all',
-  query: '',
+  job: params.get('job') || 'all',
+  query: (params.get('q') || '').trim(),
   workers: [],
   jobs: [],
   loaded: false,          // false until we have a worker list (cache or network)
@@ -66,6 +69,78 @@ function track(type, extra = {}) {
   }).catch(() => {});
 }
 
+// ─── Search ───
+
+const normalize = (s) => (s || '').toLowerCase().normalize('NFC');
+const splitWords = (s) => normalize(s).split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean);
+
+// Words that say nothing about who to call: "AC repair", "plumber near me", "बिजली का काम".
+const FILLER = new Set([
+  'repair', 'repairing', 'service', 'services', 'work', 'worker', 'workers', 'wala', 'wale', 'need', 'near', 'me',
+  'for', 'the', 'and', 'a', 'of', 'in', 'my', 'fix', 'fixing', 'job', 'काम', 'वाला', 'वाले', 'का', 'की', 'के',
+  'चा', 'ची', 'चे', 'दुरुस्ती', 'रिपेयर',
+]);
+
+/** True when a and b differ by at most one inserted, deleted or changed letter. */
+function closeEnough(a, b) {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  while (i < a.length && a[i] === b[i]) i++;
+  const tail = (x, y) => a.slice(x) === b.slice(y);
+  return tail(i + 1, i + 1) || tail(i + 1, i) || tail(i, i + 1);
+}
+
+// Searchable text per worker, built once per worker object.
+const searchIndex = new WeakMap();
+function indexOf(worker) {
+  let entry = searchIndex.get(worker);
+  if (!entry) {
+    const name = normalize(worker.name);
+    const job = normalize(jobSearchText(worker.job));
+    entry = { name, job, words: splitWords(`${name} ${job}`) };
+    searchIndex.set(worker, entry);
+  }
+  return entry;
+}
+
+/**
+ * How well a worker matches the query: 0 = no match, higher = better.
+ * Every typed word must match the name or the kind of work. Small typos
+ * ("plumbr", "electrcian") are allowed for words of 4+ letters.
+ */
+function matchScore(worker, query) {
+  const terms = splitWords(query).filter((w) => !FILLER.has(w));
+  if (terms.length === 0) return 1;
+  const { name, job, words } = indexOf(worker);
+  let score = 0;
+  for (const term of terms) {
+    if (name.startsWith(term) || name.includes(` ${term}`)) score += 4;
+    else if (name.includes(term)) score += 3;
+    else if (words.some((w) => w.startsWith(term)) || job.includes(term)) score += 2;
+    else if (term.length >= 4 && words.some((w) => closeEnough(term, w.slice(0, term.length)) || closeEnough(term, w))) score += 1;
+    else return 0;
+  }
+  return score;
+}
+
+/** Workers matching the current search, best first (ignores the category). */
+function searchResults() {
+  if (!state.query) return state.workers;
+  return state.workers
+    .map((w, i) => ({ w, i, score: matchScore(w, state.query) }))
+    .filter((r) => r.score > 0)
+    .sort((a, b) => b.score - a.score || a.i - b.i)
+    .map((r) => r.w);
+}
+
+function syncUrl() {
+  const next = new URLSearchParams();
+  if (state.job !== 'all') next.set('job', state.job);
+  if (state.query) next.set('q', state.query);
+  const qs = next.toString();
+  history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
+}
+
 // ─── Static text ───
 
 function applyTranslations() {
@@ -74,6 +149,7 @@ function applyTranslations() {
     node.textContent = t(node.dataset.i18n);
   });
   $('searchInput').placeholder = t('search');
+  $('searchClear').setAttribute('aria-label', t('clearSearch'));
   $('langSelect').value = state.lang;
   renderCategories();
   renderWorkers();
@@ -83,10 +159,14 @@ function applyTranslations() {
 
 function renderCategories() {
   if (state.jobs.length === 0) return; // keep the loading placeholders
-  $('categoryGrid').replaceChildren(...['all', ...state.jobs].map(categoryTile));
+  // Counts follow the search, so customers see which categories have matches
+  const matches = searchResults();
+  const counts = new Map([['all', matches.length]]);
+  for (const w of matches) counts.set(w.job, (counts.get(w.job) || 0) + 1);
+  $('categoryGrid').replaceChildren(...['all', ...state.jobs].map((job) => categoryTile(job, counts.get(job) || 0)));
 }
 
-function categoryTile(job) {
+function categoryTile(job, count) {
   const btn = el('button',
     'group flex min-w-0 flex-col items-center gap-2 rounded-2xl p-1 text-center outline-none ' +
     'focus-visible:ring-2 focus-visible:ring-brand-500');
@@ -106,6 +186,10 @@ function categoryTile(job) {
     job === 'all' ? t('allJobs') : jobLabel(job, state.lang));
 
   btn.append(tile, label);
+  if (state.loaded) {
+    label.append(el('span', 'mt-0.5 block text-[10px] font-normal text-neutral-400 xs:text-[11px]', String(count)));
+    if (count === 0 && state.job !== job) btn.classList.add('opacity-50');
+  }
   btn.addEventListener('click', () => selectJob(job));
   return btn;
 }
@@ -113,6 +197,7 @@ function categoryTile(job) {
 function selectJob(job) {
   state.job = job;
   if (job !== 'all') track('category', { value: job });
+  syncUrl();
   renderCategories();
   renderWorkers();
   // On phones the list sits below the grid — bring it into view
@@ -125,20 +210,23 @@ function selectJob(job) {
 // ─── Worker list ───
 
 function filteredWorkers() {
-  const q = state.query.toLowerCase();
-  return state.workers.filter((w) =>
-    (state.job === 'all' || w.job === state.job) &&
-    (!q || w.name.toLowerCase().includes(q)));
+  return searchResults().filter((w) => state.job === 'all' || w.job === state.job);
 }
 
 function renderWorkers() {
-  $('workersTitle').textContent = state.job === 'all' ? t('workersTitle') : jobLabel(state.job, state.lang);
-  $('clearFilter').hidden = state.job === 'all';
+  const jobTitle = state.job === 'all' ? '' : jobLabel(state.job, state.lang);
+  $('workersTitle').textContent = state.query
+    ? t('resultsFor', { q: state.query }) + (jobTitle ? ` · ${jobTitle}` : '')
+    : jobTitle || t('workersTitle');
+  $('clearFilter').hidden = state.job === 'all' && !state.query;
+  $('searchClear').hidden = !$('searchInput').value;
   if (!state.loaded) return; // skeletons stay until data arrives
 
   const list = filteredWorkers();
   $('resultCount').textContent = list.length === 1 ? t('countOne') : `${list.length}${t('countMany')}`;
   $('emptyState').hidden = list.length > 0;
+  // Nothing in this category, but the search finds workers in others
+  $('searchAll').hidden = !(list.length === 0 && state.job !== 'all' && state.query && searchResults().length > 0);
   $('workersGrid').replaceChildren(...list.map(workerCard));
 }
 
@@ -283,6 +371,7 @@ async function loadWorkers() {
     state.workers = await res.json();
     state.loaded = true;
     store.set(CACHE_KEY, JSON.stringify(state.workers));
+    renderCategories();
     renderWorkers();
   } catch {
     if (!state.loaded) {
@@ -303,7 +392,13 @@ async function loadJobs(workersReady) {
     await workersReady;
     state.jobs = [...new Set(state.workers.map((w) => w.job))];
   }
-  if (state.jobs.length === 0) $('categoryGrid').replaceChildren(categoryTile('all'));
+  if (state.jobs.length === 0) $('categoryGrid').replaceChildren(categoryTile('all', state.workers.length));
+  // A shared link may name a category that no longer exists
+  if (state.job !== 'all' && !state.jobs.includes(state.job)) {
+    state.job = 'all';
+    syncUrl();
+    renderWorkers();
+  }
   renderCategories();
 }
 
@@ -315,19 +410,49 @@ $('langSelect').addEventListener('change', (e) => {
   applyTranslations();
 });
 
+function setQuery(text) {
+  state.query = text.trim();
+  syncUrl();
+  renderCategories();
+  renderWorkers();
+}
+
 let searchTimer = null;
 $('searchInput').addEventListener('input', (e) => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    state.query = e.target.value.trim();
-    renderWorkers();
-  }, 200);
+  $('searchClear').hidden = !e.target.value;
+  searchTimer = setTimeout(() => setQuery(e.target.value), 200);
 });
 
-$('clearFilter').addEventListener('click', () => selectJob('all'));
+// Enter / "Search" on the phone keyboard: close the keyboard and jump to the results
+$('searchInput').addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  clearTimeout(searchTimer);
+  setQuery(e.target.value);
+  e.target.blur();
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('workersSection').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+});
+
+$('searchClear').addEventListener('click', () => {
+  clearTimeout(searchTimer);
+  $('searchInput').value = '';
+  setQuery('');
+  $('searchInput').focus();
+});
+
+$('clearFilter').addEventListener('click', () => {
+  clearTimeout(searchTimer);
+  $('searchInput').value = '';
+  state.query = '';
+  selectJob('all');
+});
+
+$('searchAll').addEventListener('click', () => selectJob('all'));
 
 // ─── Init ───
 
+$('searchInput').value = state.query;
 applyTranslations();
 loadJobs(loadWorkers());
 

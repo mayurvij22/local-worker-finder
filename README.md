@@ -228,6 +228,10 @@ Open these URLs in your browser:
 ### Adding a new job category
 1. Admin → Jobs tab → Type the name → Click "Add"
 2. Now it appears in the job dropdown and customer page filters
+3. Customers can search for it by its name. To also find it by everyday words (e.g. "leak", "पंखा") or its Hindi/Marathi name, add them in `JOB_KEYWORDS` / `JOB_HI` / `JOB_MR` in `public/js/customer/i18n.js`
+
+### Customer search
+The search box matches the worker's name **and** the kind of work, in English, Hindi and Marathi ("plumber", "नळ", "wiring", "पंखा", "AC"). Small typos are fine ("plumbr"), and filler words like "repair" or "near me" are ignored. Category tiles show how many workers match the current search. The chosen category and search are kept in the page link (`?job=Plumber&q=leak`), so a filtered list can be shared.
 
 ---
 
